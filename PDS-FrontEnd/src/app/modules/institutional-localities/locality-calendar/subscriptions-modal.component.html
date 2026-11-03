@@ -1,0 +1,39 @@
+<app-custom-modal
+  [isOpen]="isOpen()"
+  [title]="'Calendarios de feriados de ' + localityName()"
+  size="lg"
+  [closeOnBackdrop]="false"
+  [isLoading]="isLoading()"
+  (closed)="onClose()"
+>
+  <form id="subscriptionsForm" [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+    <app-form-error-banner [message]="formError()" [canReload]="isStale()" (reload)="saved.emit()" />
+
+    <div formArrayName="filas" class="flex flex-col gap-3">
+      @for (row of rows; track row) {
+        <div [formGroupName]="$index" class="grid grid-cols-1 items-end gap-3 rounded-lg border border-border bg-surface-sunken p-3 md:grid-cols-[1fr_auto_auto_auto]">
+          <span class="pb-2.5 text-sm font-medium text-ink">{{ row.value.label }}</span>
+          <app-custom-input type="date" formControlName="vigenteDesde" label="Vigente desde" />
+          <app-custom-input type="date" formControlName="vigenteHasta" label="Vigente hasta" />
+          <button type="button" class="btn-ghost btn-sm mb-4 text-error!" (click)="removeAt($index)">Quitar</button>
+        </div>
+      } @empty {
+        <p class="rounded-lg border border-warning-border bg-warning-bg px-3 py-2 text-sm text-warning-text">
+          Esta localidad no tiene calendarios de feriados. Los feriados no se descontarán de los plazos.
+        </p>
+      }
+    </div>
+
+    <div class="grid grid-cols-1 items-end gap-3 md:grid-cols-[1fr_auto]">
+      <app-custom-select-search formControlName="agregarId" label="Agregar calendario" [options]="availableOptions()" [maxResults]="50" />
+      <button type="button" class="btn-secondary mb-4" (click)="onAdd()">Agregar</button>
+    </div>
+  </form>
+
+  <div modal-actions class="flex justify-end gap-3 border-t border-border px-6 py-4">
+    <button type="button" class="btn-ghost" (click)="onClose()">Cancelar</button>
+    <button type="submit" form="subscriptionsForm" class="btn-primary" [disabled]="isSaving()">Guardar</button>
+  </div>
+</app-custom-modal>
+
+<app-confirmation-modal />

@@ -1,0 +1,65 @@
+<app-custom-modal
+  [isOpen]="isOpen()"
+  [title]="isEdit() ? 'Editar día no laborable' : 'Agregar día no laborable'"
+  size="lg"
+  [closeOnBackdrop]="false"
+  (closed)="onClose()"
+>
+  <form id="exceptionForm" [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+    <app-form-error-banner [message]="formError()" [canReload]="isStale()" (reload)="saved.emit()" />
+    @if (conflict(); as c) {
+      <button type="button" class="btn-secondary btn-sm self-start" (click)="openConflict.emit(c)">
+        Abrir ese día no laborable
+      </button>
+    }
+
+    <fieldset>
+      <legend class="field-label">Tipo</legend>
+      <div class="mt-1 grid grid-cols-1 gap-2 md:grid-cols-3" role="radiogroup">
+        @for (tipo of tipos; track tipo) {
+          <button
+            type="button"
+            role="radio"
+            class="cursor-pointer rounded-lg border p-3 text-left transition-colors"
+            [class]="form.controls.tipo.value === tipo ? 'border-brand bg-brand-50' : 'border-border bg-surface-raised'"
+            [attr.aria-checked]="form.controls.tipo.value === tipo"
+            (click)="selectTipo(tipo)"
+          >
+            <span class="block text-sm font-semibold text-ink">{{ tipoLabels[tipo] }}</span>
+            <span class="block text-xs text-ink-muted">{{ tipoHints[tipo] }}</span>
+          </button>
+        }
+      </div>
+    </fieldset>
+
+    <div>
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <app-custom-input type="date" formControlName="fechaInicio" label="Desde" [required]="true" [errorMessage]="fechaInicioError" />
+        <app-custom-input type="date" formControlName="fechaFin" label="Hasta" [required]="true" [errorMessage]="fechaFinError" />
+      </div>
+      <p class="field-error h-3.5" aria-live="polite">{{ datesError }}</p>
+    </div>
+
+    @if (needsIntervals) {
+      <div>
+        <app-intervals-editor formControlName="intervalos" label="Horario" [required]="true" />
+        <p class="field-error h-3.5" aria-live="polite">{{ intervalosError }}</p>
+      </div>
+    }
+
+    <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+      <app-custom-select formControlName="categoria" label="Categoría" [required]="true" [options]="categoriaOptions" />
+      <app-custom-select formControlName="origen" label="Origen" [required]="true" [options]="origenOptions" />
+    </div>
+    <app-custom-textarea formControlName="motivo" label="Motivo" [required]="true" [rows]="2" [errorMessage]="motivoError" />
+    <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+      <app-custom-input formControlName="referenciaNormativa" label="Referencia normativa" placeholder="Decreto 12/2027" [errorMessage]="referenciaError" />
+      <app-custom-select-search formControlName="instrumentoLegalId" label="Instrumento legal" [options]="instrumentoOptions()" />
+    </div>
+  </form>
+
+  <div modal-actions class="flex justify-end gap-3 border-t border-border px-6 py-4">
+    <button type="button" class="btn-ghost" (click)="onClose()">Cancelar</button>
+    <button type="submit" form="exceptionForm" class="btn-primary" [disabled]="isSaving()">Guardar</button>
+  </div>
+</app-custom-modal>

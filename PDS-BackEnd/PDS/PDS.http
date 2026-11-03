@@ -1,0 +1,6 @@
+@PDS_HostAddress = http://localhost:5044
+
+GET {{PDS_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

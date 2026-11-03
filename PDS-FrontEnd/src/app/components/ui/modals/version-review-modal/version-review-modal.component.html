@@ -1,0 +1,31 @@
+<app-custom-modal
+  [isOpen]="isOpen()"
+  [title]="isReject ? 'Rechazar versión' : 'Aprobar versión'"
+  [closeOnBackdrop]="false"
+  (closed)="close()"
+>
+  <div class="mb-4 rounded-lg border border-border bg-surface-sunken px-3 py-3">
+    <app-version-workflow-stepper status="InReview" />
+  </div>
+
+  <p class="mb-4 rounded-lg bg-surface-sunken px-3 py-2 text-sm text-ink-muted">
+    <span class="font-medium text-ink">Versión:</span> {{ versionName() }}
+  </p>
+
+  <app-custom-form [formGroup]="form" (formSubmit)="onSubmit()" (formInvalid)="onSubmit()">
+    <app-custom-textarea
+      [label]="isReject ? 'Motivo del rechazo' : 'Comentario (opcional)'"
+      [required]="isReject"
+      [rows]="4"
+      [errorMessage]="commentError"
+      formControlName="comment"
+    />
+
+    <div form-actions class="flex justify-end gap-3 border-t border-border pt-4">
+      <button type="button" class="btn-ghost" (click)="close()">Cancelar</button>
+      <button type="submit" [class]="isReject ? 'btn-danger' : 'btn-primary'" [disabled]="isSaving()">
+        {{ isSaving() ? 'Procesando...' : isReject ? 'Rechazar' : 'Aprobar' }}
+      </button>
+    </div>
+  </app-custom-form>
+</app-custom-modal>

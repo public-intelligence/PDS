@@ -1,0 +1,41 @@
+<app-custom-modal
+  [isOpen]="isOpen()"
+  title="Posibles localidades duplicadas"
+  size="lg"
+  [closeOnBackdrop]="false"
+  (closed)="onCancel()"
+>
+  <form [formGroup]="form" (ngSubmit)="onConfirm()" class="flex flex-col gap-4">
+    <div class="rounded-lg border border-warning-border bg-warning-bg px-3 py-2 text-sm text-warning-text">
+      Se encontraron registros que podrían ser duplicados. Puede continuar si aporta una justificación.
+    </div>
+
+    <ul class="divide-y divide-border rounded-lg border border-border text-sm">
+      @for (w of warnings(); track w.localidadId + w.campo) {
+        <li class="flex items-center justify-between gap-2 px-3 py-2">
+          <div>
+            <p class="font-medium text-ink">{{ w.nombreOficial }} <span class="text-ink-subtle">({{ w.codigo }})</span></p>
+            <p class="text-xs text-ink-muted">{{ w.motivo }}</p>
+          </div>
+          <a [routerLink]="['/localidades', w.localidadId]" target="_blank" class="text-brand underline">Ver</a>
+        </li>
+      }
+    </ul>
+
+    <app-custom-textarea
+      formControlName="justificacion"
+      label="Justificación"
+      [required]="true"
+      [rows]="3"
+      placeholder="Explique por qué no es un duplicado..."
+      [errorMessage]="justificacionError"
+    />
+
+    <div modal-actions class="flex justify-end gap-3 border-t border-border px-6 py-4">
+      <button type="button" class="btn-ghost" (click)="onCancel()">
+        Cancelar
+      </button>
+      <button type="submit" class="btn-primary">Continuar de todos modos</button>
+    </div>
+  </form>
+</app-custom-modal>

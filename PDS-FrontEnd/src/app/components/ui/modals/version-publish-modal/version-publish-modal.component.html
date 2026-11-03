@@ -1,0 +1,77 @@
+<app-custom-modal
+  [isOpen]="isOpen()"
+  title="Publicar versión"
+  size="lg"
+  [closeOnBackdrop]="false"
+  (closed)="close()"
+>
+  <div class="mb-4 rounded-lg border border-border bg-surface-sunken px-3 py-3">
+    <app-version-workflow-stepper status="Approved" />
+  </div>
+
+  <p class="mb-4 rounded-lg bg-surface-sunken px-3 py-2 text-sm text-ink-muted">
+    <span class="font-medium text-ink">Versión:</span> {{ versionName() }}
+  </p>
+
+  <app-custom-form [formGroup]="form" (formSubmit)="onSubmit()" (formInvalid)="onSubmit()">
+    <p class="text-sm font-semibold text-ink">Instrumento legal</p>
+
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <app-custom-select
+        label="Tipo"
+        [options]="typeOptions"
+        [required]="true"
+        formControlName="type"
+      />
+      <app-custom-input
+        label="Número"
+        placeholder="Ej. 123-26"
+        [required]="true"
+        [errorMessage]="error('number', 'El número')"
+        formControlName="number"
+      />
+      <app-custom-input
+        label="Fecha del instrumento"
+        type="date"
+        [required]="true"
+        [errorMessage]="error('instrumentDate', 'La fecha')"
+        formControlName="instrumentDate"
+      />
+      <app-custom-input
+        label="Autoridad emisora"
+        placeholder="Ej. Poder Ejecutivo"
+        [required]="true"
+        [errorMessage]="error('issuingAuthority', 'La autoridad')"
+        formControlName="issuingAuthority"
+      />
+    </div>
+
+    <app-custom-input
+      label="Enlace al documento (URL)"
+      type="url"
+      placeholder="https://..."
+      formControlName="documentUrl"
+    />
+
+    <p class="mt-2 text-sm font-semibold text-ink">Vigencia</p>
+    <app-custom-input
+      label="Fecha de vigencia (desde)"
+      type="date"
+      [required]="true"
+      [errorMessage]="error('effectiveFrom', 'La fecha de vigencia')"
+      formControlName="effectiveFrom"
+    />
+
+    <label class="mt-1 flex items-center gap-2 text-sm text-ink-muted">
+      <input type="checkbox" class="!h-4 !w-4 !p-0" formControlName="isPublic" />
+      Visible en el organigrama público
+    </label>
+
+    <div form-actions class="flex justify-end gap-3 border-t border-border pt-4">
+      <button type="button" class="btn-ghost" (click)="close()">Cancelar</button>
+      <button type="submit" class="btn-primary" [disabled]="isSaving()">
+        {{ isSaving() ? 'Publicando...' : 'Publicar' }}
+      </button>
+    </div>
+  </app-custom-form>
+</app-custom-modal>

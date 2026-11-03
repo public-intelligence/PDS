@@ -1,0 +1,40 @@
+<app-custom-modal
+  [isOpen]="isOpen()"
+  [title]="isEdit ? 'Editar feriado' : 'Agregar feriado'"
+  size="md"
+  [closeOnBackdrop]="false"
+  (closed)="onClose()"
+>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+    <app-form-error-banner [message]="formError()" [canReload]="isStale()" (reload)="saved.emit()" />
+
+    <app-custom-input type="date" formControlName="fecha" label="Fecha" [required]="true" [errorMessage]="fechaError" />
+    <app-custom-input formControlName="nombre" label="Nombre" [required]="true" [errorMessage]="nombreError" />
+
+    <fieldset>
+      <legend class="field-label">Alcance</legend>
+      <div class="mt-1 flex flex-wrap gap-4">
+        @for (alcance of alcances; track alcance) {
+          <label class="flex items-center gap-1.5 text-sm text-ink">
+            <input type="radio" formControlName="alcance" [value]="alcance" /> {{ alcanceLabels[alcance] }}
+          </label>
+        }
+      </div>
+    </fieldset>
+
+    @if (isReducida) {
+      <div>
+        <app-intervals-editor formControlName="intervalos" label="Horario que se trabaja" [required]="true" />
+        <p class="field-error h-3.5" aria-live="polite">{{ intervalosError }}</p>
+      </div>
+    }
+
+    <app-custom-input formControlName="referenciaNormativa" label="Referencia normativa" [errorMessage]="referenciaError" />
+    <app-custom-textarea formControlName="notas" label="Notas" [rows]="2" [errorMessage]="notasError" />
+
+    <div modal-actions class="flex justify-end gap-3 border-t border-border px-6 py-4">
+      <button type="button" class="btn-ghost" (click)="onClose()">Cancelar</button>
+      <button type="submit" class="btn-primary" [disabled]="isSaving()">Guardar</button>
+    </div>
+  </form>
+</app-custom-modal>

@@ -1,0 +1,152 @@
+<div class="p-6 space-y-6 max-w-5xl">
+  <header class="flex items-start justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Mi acceso</h1>
+      <p class="text-sm text-gray-600 mt-1">
+        Qué puede hacer su usuario en PDS y sobre qué áreas. Los permisos se conceden en GOB-ID:
+        si necesita uno que no aparece, solicítelo a Ciberseguridad indicando el código exacto.
+      </p>
+    </div>
+    <button
+      type="button"
+      class="btn-secondary shrink-0"
+      [disabled]="refreshing()"
+      (click)="refresh()">
+      {{ refreshing() ? 'Actualizando…' : 'Actualizar mi área' }}
+    </button>
+  </header>
+
+  @if (loading()) {
+    <p class="text-sm text-gray-500">Cargando su acceso…</p>
+  } @else {
+    @if (error()) {
+      <div class="border-l-4 border-red-500 bg-red-50 p-4" role="alert">
+        <p class="text-sm text-red-800">{{ error() }}</p>
+      </div>
+    }
+
+    @if (context(); as ctx) {
+    <section class="bg-white border border-gray-200 rounded-lg p-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">Su identidad y área</h2>
+      <dl class="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+        <div>
+          <dt class="text-sm text-gray-500">Nombre</dt>
+          <dd class="text-sm font-medium text-gray-900">{{ ctx.userName || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-500">Cargo</dt>
+          <dd class="text-sm font-medium text-gray-900">{{ ctx.positionName || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-500">Unidad</dt>
+          <dd class="text-sm font-medium text-gray-900">{{ ctx.unitAreaName || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-500">Área que formula plan</dt>
+          <dd class="text-sm font-medium text-gray-900">
+            {{ ctx.planAreaName || 'Sin área asignada' }}
+          </dd>
+        </div>
+      </dl>
+
+      @if (!ctx.planAreaId) {
+        <div class="mt-4 border-l-4 border-amber-500 bg-amber-50 p-4" role="status">
+          <p class="text-sm text-amber-900">
+            No se pudo resolver su área. Sin ella no podrá editar POA ni requerimientos, aunque
+            tenga los permisos: el alcance por área falla cerrado. Verifique con Recursos Humanos
+            que su cargo esté registrado en el organigrama y vuelva a intentar con
+            «Actualizar mi área».
+          </p>
+        </div>
+      }
+
+      @if (ctx.isDevOverride) {
+        <p class="mt-4 text-sm text-purple-700">
+          ⚠ Su contexto está alterado por <code>PlanningDevOverrides</code> (solo desarrollo):
+          lo que ve aquí no refleja su acceso real en producción.
+        </p>
+      }
+    </section>
+
+    <section class="bg-white border border-gray-200 rounded-lg p-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-1">Áreas sobre las que puede actuar</h2>
+      <p class="text-sm text-gray-600 mb-4">
+        Su unidad y los niveles superiores que califican para planificar.
+      </p>
+
+      @if (eligibleAreas().length) {
+        <ul class="text-sm text-gray-800 space-y-1">
+          @for (area of eligibleAreas(); track area.id) {
+            <li class="text-sm font-medium text-gray-900">{{ area.name }}</li>
+          }
+        </ul>
+      } @else {
+        <p class="text-sm text-gray-500">Ninguna. No podrá editar planes ni requerimientos.</p>
+      }
+
+      <h3 class="text-sm font-semibold text-gray-700 mt-5 mb-2">Áreas consolidadoras</h3>
+      @if (consolidatorAreas().length) {
+        <ul class="text-sm text-gray-800 space-y-1">
+          @for (area of consolidatorAreas(); track area.id) {
+            <li class="text-sm font-medium text-gray-900">{{ area.name }}</li>
+          }
+        </ul>
+      } @else {
+        <p class="text-sm text-gray-500">No pertenece a ninguna área consolidadora.</p>
+      }
+
+      @if (consolidatesButHasNoArea()) {
+        <div class="mt-4 border-l-4 border-amber-500 bg-amber-50 p-4" role="status">
+          <p class="text-sm text-amber-900">
+            Tiene el permiso de consolidar, pero no pertenece a ninguna área consolidadora, así
+            que no podrá decidir, reducir ni fusionar requerimientos. Pida que se enlace su área
+            a un perfil de área consolidadora.
+          </p>
+        </div>
+      }
+    </section>
+
+    <section class="bg-white border border-gray-200 rounded-lg p-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-1">
+        Permisos ({{ grantedCount() }} de {{ catalog().length }})
+      </h2>
+      <p class="text-sm text-gray-600 mb-4">
+        Todos los códigos que PDS reconoce. Los marcados son los que trae su rol de GOB-ID.
+      </p>
+
+      @if (catalogIsLocal()) {
+        <p class="text-xs text-gray-500 mb-4">
+          El servidor no expone todavía el catálogo completo, así que esta lista se armó con los
+          códigos que conoce esta versión de la aplicación más los de su token. Sus permisos
+          concedidos son correctos; podrían faltar códigos nuevos que aún no conoce el cliente.
+        </p>
+      }
+
+      <div class="space-y-5">
+        @for (group of groups(); track group.module) {
+          <div>
+            <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">
+              {{ group.module }}
+            </h3>
+            <ul class="grid gap-1 sm:grid-cols-2">
+              @for (entry of group.entries; track entry.code) {
+                <li class="flex items-center gap-2 text-sm">
+                  <span [class]="entry.granted ? 'text-green-600' : 'text-gray-300'">
+                    {{ entry.granted ? '●' : '○' }}
+                  </span>
+                  <code [class]="entry.granted ? 'text-gray-900' : 'text-gray-400'">
+                    {{ entry.code }}
+                  </code>
+                  @if (entry.viaAdminWildcard) {
+                    <span class="text-xs text-gray-500">(vía planning:admin)</span>
+                  }
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      </div>
+    </section>
+    }
+  }
+</div>

@@ -1,0 +1,56 @@
+# Visual Studio
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.sln.docstates
+
+# VS Code
+.vscode/
+
+# NuGet
+*.nupkg
+*.snupkg
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+
+# Dependencies
+node_modules/
+packages/
+
+# OS
+Thumbs.db
+.DS_Store
+
+## Secretos y credenciales — nada de esto entra al repositorio.
+## Los valores de dev se piden a quien administra la configuracion (Secure File
+## pds-dev-secrets.json) y se cargan con `dotnet user-secrets`. Ver docs/local-setup.md.
+secrets.local.json
+**/secrets.local.json
+appsettings.*.local.json
+.env
+.env.*
+*.pem
+
+## Secretos y credenciales — nada de esto entra al repositorio.
+## Regla amplia a proposito: `*.env` cubre cualquier copia con otro nombre (copia.env,
+## mis-secretos.env, " - Copy.env"). Las reglas puntuales dejaban pasar justo esas.
+*.env
+!*.env.example
+.env
+.env.*
+!.env.example
+secrets.local.json
+**/secrets.local.json
+appsettings.Local.json
+**/appsettings.Local.json
+appsettings.*.local.json
+secrets.json
+*.pem
+*.key
+*.pfx

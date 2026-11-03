@@ -1,0 +1,43 @@
+<app-custom-modal
+  [isOpen]="isOpen()"
+  [title]="title()"
+  size="md"
+  [closeOnBackdrop]="false"
+  (closed)="onClose()"
+>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+    <p class="text-sm text-ink-muted">{{ localityName() }}</p>
+    <p class="rounded-lg border border-info-border bg-info-bg px-3 py-2 text-sm text-info-text">
+      {{
+        isSuspend()
+          ? 'Mientras dure la suspensión, la localidad no tendrá días laborables y los plazos de sus solicitudes se ajustarán.'
+          : 'Desde hoy la localidad vuelve a su horario laboral.'
+      }}
+    </p>
+
+    <app-custom-textarea
+      formControlName="motivo"
+      label="Motivo"
+      [required]="isSuspend()"
+      [rows]="3"
+      placeholder="Indique el motivo..."
+      [errorMessage]="motivoError"
+    />
+
+    @if (isSuspend()) {
+      <div class="grid grid-cols-2 gap-3">
+        <app-custom-input type="date" formControlName="fechaInicio" label="Inicio (opcional)" />
+        <app-custom-input type="date" formControlName="fechaFin" label="Fin (opcional)" />
+      </div>
+    }
+
+    <div modal-actions class="flex justify-end gap-3 border-t border-border px-6 py-4">
+      <button type="button" class="btn-ghost" (click)="onClose()">
+        Cancelar
+      </button>
+      <button type="submit" class="btn-primary" [disabled]="isSaving()">
+        {{ isSuspend() ? 'Suspender' : 'Reactivar' }}
+      </button>
+    </div>
+  </form>
+</app-custom-modal>

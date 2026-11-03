@@ -1,0 +1,22 @@
+<Solution>
+  <Folder Name="/01. Domain/">
+    <Project Path="../PDS.Domain/PDS.Domain.csproj" />
+  </Folder>
+  <Folder Name="/02. Application/">
+    <Project Path="../PDS.Application/PDS.Application.csproj" />
+  </Folder>
+  <Folder Name="/03. Service/">
+    <Project Path="../PDS.Service/PDS.Service.csproj">
+      <BuildDependency Project="../PDS.Application/PDS.Application.csproj" />
+      <BuildDependency Project="../PDS.Domain/PDS.Domain.csproj" />
+    </Project>
+  </Folder>
+  <Folder Name="/04. Presentation/">
+    <Project Path="PDS.csproj">
+      <BuildDependency Project="../PDS.Service/PDS.Service.csproj" />
+    </Project>
+  </Folder>
+  <Folder Name="/05. Tests/">
+    <Project Path="../PDS.Tests/PDS.Tests.csproj" />
+  </Folder>
+</Solution>

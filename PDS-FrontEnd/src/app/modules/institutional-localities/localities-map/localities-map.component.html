@@ -1,0 +1,57 @@
+<div class="relative isolate h-full min-h-[420px] w-full overflow-hidden rounded-xl ring-1 ring-border">
+  <div #mapContainer class="h-full min-h-[420px] w-full"></div>
+
+  <!-- Controles: color de marcadores + reencuadre -->
+  <div class="absolute top-3 right-3 z-500 flex items-center gap-2">
+    <div class="segmented bg-surface-raised shadow-md ring-1 ring-border" role="group" aria-label="Color de marcadores">
+      <button
+        type="button"
+        (click)="setColorMode('state')"
+        class="segmented-item text-xs"
+        [class.segmented-item-active]="colorMode() === 'state'"
+        [attr.aria-pressed]="colorMode() === 'state'"
+      >
+        Estado
+      </button>
+      <button
+        type="button"
+        (click)="setColorMode('type')"
+        class="segmented-item text-xs"
+        [class.segmented-item-active]="colorMode() === 'type'"
+        [attr.aria-pressed]="colorMode() === 'type'"
+      >
+        Tipo
+      </button>
+    </div>
+
+    <button
+      type="button"
+      (click)="fit()"
+      class="btn-icon bg-surface-raised shadow-md ring-1 ring-border"
+      title="Reencuadrar al conjunto de localidades"
+      aria-label="Reencuadrar"
+    >
+      <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 8.25V5.25A1.5 1.5 0 0 1 5.25 3.75h3m7.5 0h3a1.5 1.5 0 0 1 1.5 1.5v3m0 7.5v3a1.5 1.5 0 0 1-1.5 1.5h-3m-7.5 0h-3a1.5 1.5 0 0 1-1.5-1.5v-3" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Leyenda dinámica según el modo de color -->
+  @if (legend().length) {
+    <div class="absolute bottom-3 left-3 z-500 max-h-[45%] w-48 overflow-y-auto custom-scrollbar rounded-lg bg-surface-raised/95 p-3 shadow-md ring-1 ring-border backdrop-blur">
+      <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-ink-subtle">
+        {{ colorMode() === 'type' ? 'Tipo de localidad' : 'Estado' }}
+      </p>
+      <ul class="flex flex-col gap-1.5">
+        @for (item of legend(); track item.label) {
+          <li class="flex items-center gap-2 text-xs text-ink-muted">
+            <span class="inline-block size-3 shrink-0 rounded-full ring-1 ring-black/10" [style.background]="item.color"></span>
+            <span class="flex-1 truncate" [title]="item.label">{{ item.label }}</span>
+            <span class="shrink-0 font-medium tabular-nums text-ink">{{ item.count }}</span>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</div>

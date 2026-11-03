@@ -1,0 +1,97 @@
+<app-modal title="Importar estructura organizacional">
+  <div class="w-[min(40rem,80vw)]">
+    <p class="mb-4 text-sm text-ink-muted">
+      Suba un archivo <strong class="text-ink">JSON</strong> con la estructura organizacional. El
+      sistema valida el formato, regenera los códigos e identificadores, y la crea dentro del
+      borrador en curso.
+    </p>
+
+    @if (!hasDraft) {
+      <div
+        class="mb-4 flex flex-col gap-3 rounded-xl border border-warning-border bg-warning-bg p-4 sm:flex-row sm:items-center"
+      >
+        <div class="flex-1">
+          <p class="text-sm font-semibold text-warning-text">Se requiere un borrador</p>
+          <p class="text-sm text-warning-text">
+            Para importar debe existir un borrador de versión. Los cambios quedan vigentes al
+            publicarlo.
+          </p>
+        </div>
+        <button type="button" class="btn-secondary btn-sm shrink-0" (click)="onCreateDraft()">
+          Crear borrador
+        </button>
+      </div>
+    }
+
+    <!-- Ejemplo del formato esperado -->
+    <div class="mb-4">
+      <div class="mb-2 flex items-center justify-between gap-3">
+        <h3 class="text-sm font-semibold text-ink">Formato esperado (ejemplo)</h3>
+        <button type="button" class="btn-secondary btn-sm shrink-0" (click)="downloadSample()">
+          Descargar ejemplo
+        </button>
+      </div>
+      <pre
+        class="custom-scrollbar max-h-56 overflow-auto rounded-lg border border-border bg-surface-sunken p-3 text-xs text-ink-muted"
+        >{{ sampleJson }}</pre
+      >
+      <p class="mt-1 text-xs text-ink-subtle">
+        Cada unidad requiere <code>name</code> y <code>areaType</code> (el tipo de área se busca por
+        nombre). <code>children</code> contiene las dependencias anidadas.
+      </p>
+    </div>
+
+    <!-- Selector de archivo (dropzone) -->
+    <div class="mb-4">
+      <p class="field-label">Archivo JSON</p>
+      <label
+        class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-surface-sunken px-4 py-8 text-center transition-colors hover:border-brand-300 hover:bg-brand-50"
+      >
+        <svg class="size-8 mx-auto text-ink-subtle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 7.5 12 3m0 0L7.5 7.5M12 3v13.5" />
+        </svg>
+        <span class="text-sm font-medium text-ink">
+          {{ fileName() || 'Seleccione o arrastre un archivo JSON' }}
+        </span>
+        <span class="text-xs block text-ink-subtle">Solo archivos .json</span>
+        <input
+          type="file"
+          accept="application/json,.json"
+          (change)="onFileSelected($event)"
+          class="sr-only"
+        />
+      </label>
+    </div>
+
+    <!-- Errores de validación (cliente) -->
+    @if (errors().length > 0) {
+      <div class="mb-4 rounded-lg border border-error-border bg-error-bg p-3">
+        <p class="mb-1 text-sm font-semibold text-error-text">El archivo no es válido:</p>
+        <ul class="list-inside list-disc text-sm text-error-text">
+          @for (error of errors(); track error) {
+            <li>{{ error }}</li>
+          }
+        </ul>
+      </div>
+    }
+
+    <!-- Formato válido -->
+    @if (parsed() && errors().length === 0) {
+      <div class="mb-4 rounded-lg border border-success-border bg-success-bg p-3 text-sm text-success-text">
+        Formato válido — {{ nodeCount() }} unidad(es) en «{{ fileName() }}».
+      </div>
+    }
+
+    <div class="mt-6 flex justify-end gap-3">
+      <button type="button" class="btn-ghost" (click)="closeModal()">Cancelar</button>
+      <button
+        type="button"
+        class="btn-primary"
+        [disabled]="!parsed() || !hasDraft || isImporting()"
+        (click)="onImport()"
+      >
+        {{ isImporting() ? 'Importando…' : 'Importar' }}
+      </button>
+    </div>
+  </div>
+</app-modal>

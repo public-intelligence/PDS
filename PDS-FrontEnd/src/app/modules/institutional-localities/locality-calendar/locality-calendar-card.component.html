@@ -1,0 +1,255 @@
+@let cal = calendario();
+@let tl = timeline();
+
+<section class="card p-4">
+  <h3 class="mb-3 text-sm font-semibold tracking-wide text-ink-subtle uppercase">Calendario laboral</h3>
+
+  @if (isLoading()) {
+    <div class="flex justify-center p-8"><span class="loader"></span></div>
+  } @else if (hasError() || !cal) {
+    <div class="flex flex-col items-center gap-3 p-8 text-center">
+      <p class="text-sm text-ink-muted">No se pudo cargar el calendario laboral. Intente de nuevo.</p>
+      <button type="button" class="btn-secondary btn-sm" (click)="load()">Reintentar</button>
+    </div>
+  } @else {
+    <!-- Franja de cabecera -->
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg bg-surface-sunken px-3 py-2 text-sm text-ink">
+      <span><span class="text-ink-subtle">Zona horaria:</span> {{ cal.zonaHoraria }}</span>
+      <span><span class="text-ink-subtle">Hora local:</span> <span class="tabular-nums">{{ localTime() }}</span></span>
+      @if (offset()) { <span class="tabular-nums">{{ offset() }}</span> }
+      @if (zona()?.esHorarioVerano) { <span class="badge-info">Horario de verano</span> }
+      @if (nextClockChange()) { <span class="text-ink-muted">{{ nextClockChange() }}</span> }
+      @if (estado(); as e) {
+        <span [class]="e.laborable ? 'badge-success' : 'badge-neutral'">{{ e.laborable ? 'Abierta ahora' : 'Cerrada ahora' }}</span>
+      }
+    </div>
+
+    <!-- 1. Horario semanal -->
+    <div class="mt-5">
+      <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <h4 class="text-sm font-semibold text-ink">1. Días laborables recurrentes</h4>
+        @if (canManage()) {
+          <button type="button" class="btn-secondary btn-sm" (click)="isScheduleOpen.set(true)">Cambiar horario</button>
+        }
+      </div>
+
+      @if (tl.current; as current) {
+        <table class="w-full text-left text-sm">
+          <caption class="mb-1 text-left text-xs text-ink-subtle">
+            Vigente desde {{ date(current.vigenteDesde) }} · horas en hora local
+          </caption>
+          <thead class="text-xs tracking-wide text-ink-subtle uppercase">
+            <tr><th class="px-3 py-1.5">Día</th><th class="px-3 py-1.5">Laborable</th><th class="px-3 py-1.5">Horario</th></tr>
+          </thead>
+          <tbody class="divide-y divide-border">
+            @for (day of weekdays; track day) {
+              <tr>
+                <td class="px-3 py-1.5 text-ink">{{ dayLong[day] }}</td>
+                <td class="px-3 py-1.5 text-ink-muted">{{ hours(current, day) ? 'Sí' : 'No' }}</td>
+                <td class="px-3 py-1.5 tabular-nums text-ink">{{ hours(current, day) || '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <p class="rounded-lg border border-warning-border bg-warning-bg px-3 py-2 text-sm text-warning-text">
+          Esta localidad todavía no tiene un horario laboral vigente.
+        </p>
+      }
+
+      @for (version of tl.upcoming; track version.id) {
+        <div class="mt-2 rounded-lg border border-info-border bg-info-bg px-3 py-2 text-sm text-info-text">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span>Nuevo horario programado desde {{ date(version.vigenteDesde) }}</span>
+            <span class="flex gap-1">
+              <button type="button" class="btn-ghost btn-sm" [attr.aria-expanded]="previewedVersionId() === version.id" (click)="togglePreview(version)">Ver</button>
+              @if (canManage()) {
+                <button type="button" class="btn-ghost btn-sm text-error!" (click)="confirmDeleteVersion(version)">Eliminar</button>
+              }
+            </span>
+          </div>
+          @if (previewedVersionId() === version.id) {
+            <ul class="mt-2 grid grid-cols-4 gap-1.5 sm:grid-cols-7" [attr.aria-label]="summary(version)">
+              @for (day of weekdays; track day) {
+                @let intervals = dayIntervals(version, day);
+                <li class="rounded-md bg-surface-raised px-2 py-1.5 text-center" [title]="dayLong[day]">
+                  <span class="block text-xs font-semibold text-ink">{{ dayShort[day] }}</span>
+                  @for (interval of intervals; track $index) {
+                    <span class="block text-xs tabular-nums text-ink-muted">{{ interval }}</span>
+                  } @empty {
+                    <span class="block text-xs text-ink-subtle">Cerrado</span>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      }
+
+      @if (tl.past.length) {
+        <button type="button" class="btn-ghost btn-sm mt-2" [attr.aria-expanded]="showHistory()" (click)="showHistory.set(!showHistory())">
+          {{ showHistory() ? 'Ocultar historial' : 'Ver historial' }}
+        </button>
+        @if (showHistory()) {
+          <ul class="mt-1 divide-y divide-border text-sm">
+            @for (version of tl.past; track version.id) {
+              <li class="py-1.5">
+                <span class="tabular-nums text-ink">{{ date(version.vigenteDesde) }} · {{ summary(version) }}</span>
+                <span class="block text-xs text-ink-subtle">
+                  {{ version.creadoPor || 'Sistema' }}@if (version.motivo) { · {{ version.motivo }} }
+                </span>
+              </li>
+            }
+          </ul>
+        }
+      }
+    </div>
+
+    <!-- 2. Calendarios de feriados -->
+    <div class="mt-5">
+      <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <h4 class="text-sm font-semibold text-ink">2. Calendarios de feriados</h4>
+        @if (canManage()) {
+          <button type="button" class="btn-secondary btn-sm" (click)="isSubscriptionsOpen.set(true)">Gestionar calendarios</button>
+        }
+      </div>
+      @if (cal.suscripciones.length) {
+        <ul class="flex flex-wrap gap-2">
+          @for (s of cal.suscripciones; track s.calendarioFeriadosId) {
+            <li>
+              <a [routerLink]="['/settings/calendarios-feriados', s.calendarioFeriadosId]" class="badge-info hover:underline">{{ subscriptionLabel(s) }}</a>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="rounded-lg border border-warning-border bg-warning-bg px-3 py-2 text-sm text-warning-text">
+          Esta localidad no tiene calendarios de feriados. Los feriados no se descontarán de los plazos.
+        </p>
+      }
+    </div>
+
+    <!-- 3. Días no laborables y excepciones -->
+    <div class="mt-5">
+      <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <h4 class="text-sm font-semibold text-ink">3. Días no laborables y excepciones</h4>
+        <div class="flex items-center gap-1">
+          <button type="button" class="btn-icon" aria-label="Año anterior" (click)="setYear(year() - 1)">‹</button>
+          <span class="w-12 text-center text-sm font-semibold tabular-nums text-ink">{{ year() }}</span>
+          <button type="button" class="btn-icon" aria-label="Año siguiente" (click)="setYear(year() + 1)">›</button>
+          @if (canManage()) {
+            <button type="button" class="btn-primary btn-sm ml-2" (click)="openCreateException()">Agregar día no laborable</button>
+          }
+        </div>
+      </div>
+
+      @if (isLoadingYear()) {
+        <div class="flex justify-center p-8"><span class="loader"></span></div>
+      } @else if (yearError()) {
+        <div class="flex flex-col items-center gap-3 p-8 text-center">
+          <p class="text-sm text-ink-muted">No se pudieron cargar los días no laborables de {{ year() }}. Intente de nuevo.</p>
+          <button type="button" class="btn-secondary btn-sm" (click)="loadYear()">Reintentar</button>
+        </div>
+      } @else {
+        @if (excepciones().length) {
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="text-xs tracking-wide text-ink-subtle uppercase">
+                <tr>
+                  <th class="px-2 py-1.5">Fechas</th>
+                  <th class="px-2 py-1.5">Tipo</th>
+                  <th class="px-2 py-1.5">Horario</th>
+                  <th class="px-2 py-1.5">Categoría</th>
+                  <th class="px-2 py-1.5">Origen</th>
+                  <th class="px-2 py-1.5">Motivo</th>
+                  <th class="px-2 py-1.5">Registrado por</th>
+                  <th class="px-2 py-1.5">Canal</th>
+                  @if (canManage()) { <th class="px-2 py-1.5 text-right">Acciones</th> }
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-border">
+                @for (e of excepciones(); track e.id) {
+                  @let locked = lockReason(e);
+                  <tr>
+                    <td class="px-2 py-1.5 whitespace-nowrap tabular-nums text-ink">{{ exceptionDates(e) }}</td>
+                    <td class="px-2 py-1.5 text-ink">{{ tipoLabel(e) }}</td>
+                    <td class="px-2 py-1.5 tabular-nums text-ink-muted">{{ exceptionHours(e) }}</td>
+                    <td class="px-2 py-1.5 text-ink-muted">{{ categoriaLabel(e) }}</td>
+                    <td class="px-2 py-1.5 text-ink-muted">{{ origenLabel(e) }}</td>
+                    <td class="px-2 py-1.5 text-ink-muted">{{ e.motivo }}</td>
+                    <td class="px-2 py-1.5 text-ink-muted">{{ e.registradoPor || '—' }}</td>
+                    <td class="px-2 py-1.5 text-ink-muted">{{ canalLabel(e) }}</td>
+                    @if (canManage()) {
+                      <td class="px-2 py-1.5 text-right whitespace-nowrap">
+                        @if (locked) {
+                          <span class="inline-flex items-center gap-1 text-xs text-ink-subtle" [title]="locked">
+                            <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                              <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clip-rule="evenodd" />
+                            </svg>
+                            <span class="sr-only">{{ locked }}</span>
+                            Bloqueado
+                          </span>
+                        } @else {
+                          <button type="button" class="btn-ghost btn-sm" (click)="openEditException(e)">Editar</button>
+                          <button type="button" class="btn-ghost btn-sm text-error!" (click)="confirmDeleteException(e)">Eliminar</button>
+                        }
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p class="rounded-lg border border-dashed border-border-strong bg-surface-sunken/60 px-4 py-6 text-center text-sm text-ink-subtle">
+            No hay días no laborables registrados para {{ year() }}.
+          </p>
+        }
+
+        <!-- Vista anual -->
+        <h4 class="mt-5 mb-2 text-sm font-semibold text-ink">Vista anual {{ year() }}</h4>
+        <app-calendar-annual-view
+          [year]="year()"
+          [days]="diasEfectivos()"
+          [today]="today()"
+          [canManage]="canManage()"
+          (addException)="openCreateException($event)"
+        />
+      }
+    </div>
+  }
+</section>
+
+@if (cal) {
+  <app-schedule-editor-modal
+    [isOpen]="isScheduleOpen()"
+    [localityId]="localityId()"
+    [currentWeek]="currentWeek()"
+    [today]="today()"
+    [isAdmin]="isAdmin"
+    (closed)="isScheduleOpen.set(false)"
+    (saved)="onSaved()"
+  />
+  <app-subscriptions-modal
+    [isOpen]="isSubscriptionsOpen()"
+    [localityId]="localityId()"
+    [localityName]="localityName()"
+    [paisId]="paisId()"
+    [suscripciones]="cal.suscripciones"
+    (closed)="isSubscriptionsOpen.set(false)"
+    (saved)="onSaved()"
+  />
+  <app-exception-editor-modal
+    [isOpen]="isExceptionOpen()"
+    [localityId]="localityId()"
+    [excepcion]="editingException()"
+    [defaultDate]="exceptionDate()"
+    [existing]="excepciones()"
+    [today]="today()"
+    [isAdmin]="isAdmin"
+    [retroWindowDays]="retroWindowDays()"
+    (closed)="isExceptionOpen.set(false)"
+    (saved)="onSaved()"
+    (openConflict)="openEditException($event)"
+  />
+}
+<app-confirmation-modal />

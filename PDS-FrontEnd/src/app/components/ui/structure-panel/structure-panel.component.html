@@ -1,0 +1,215 @@
+<div
+  class="mb-3"
+  [ngClass]="divisionLevel > 0 ? 'ml-4 border-l border-border pl-4' : ''"
+>
+  <section
+    [ngClass]="{
+      'border-l-brand-700': divisionLevel === 0,
+      'border-l-brand-600': divisionLevel === 1,
+      'border-l-brand-500': divisionLevel === 2,
+      'border-l-brand-400': divisionLevel === 3,
+      'border-l-brand-300': divisionLevel >= 4,
+    }"
+    (animationend)="onAnimationEnd($event)"
+    class="group slide-in-top flex h-16 w-full place-items-center justify-between rounded-lg border border-border border-l-4 bg-surface-raised p-4 text-ink shadow-sm transition-shadow duration-150 hover:shadow-md"
+  >
+    <p
+      class="flex w-[90%] cursor-pointer items-center gap-3 truncate text-[.9rem] font-medium text-ink focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200 md:text-[1.1rem]"
+      title="{{ name }}"
+      (click)="onShowDependencies(id, divisionLevel)"
+      (keydown)="onShowDependencies(id, divisionLevel)"
+      tabindex="0"
+    >
+      <span class="shrink-0 font-mono text-[.7rem] text-ink-subtle md:text-xs">{{ code }}</span>
+      <span class="truncate">{{ name }}</span>
+      <span class="badge-neutral hidden shrink-0 sm:inline-flex">{{ areaName }}</span>
+    </p>
+
+    <div class="flex items-center gap-3">
+      <div
+        [ngClass]="dependencies.length > 0 ? 'border-border pr-3 md:border-r' : 'pr-1'"
+        class="flex items-center gap-1"
+      >
+        <!-- Añadir -->
+        <button
+          type="button"
+          class="btn-icon hidden text-ink-muted hover:text-brand md:inline-grid"
+          (click)="onShowCreateModal({ id, name, code, areaTypeId })"
+          title="Añadir una dependencia"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="size-5"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+        </button>
+
+        <!-- Editar -->
+        <button
+          type="button"
+          class="btn-icon hidden text-ink-muted hover:text-brand md:inline-grid"
+          (click)="onShowEditModal({ id, name, parentId, parentName, code, areaTypeId })"
+          title="Editar dependencia"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="size-5"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"
+            />
+          </svg>
+        </button>
+
+        <!-- Borrar -->
+        <button
+          type="button"
+          class="btn-icon hidden text-error hover:text-error-text md:inline-grid"
+          (click)="onShowDeleteConfirmationModal({ id, name, code })"
+          title="Borrar dependencia"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="size-5"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Chevron expandir/colapsar -->
+      @if (dependencies.length > 0) {
+        <div class="hidden items-center gap-2 md:flex">
+          <span class="badge-neutral">{{ dependencies.length }}</span>
+          <button
+            type="button"
+            class="btn-icon"
+            (click)="onShowDependencies(id, divisionLevel)"
+            (keydown)="onShowDependencies(id, divisionLevel)"
+            tabindex="0"
+            [ngClass]="showDependencies ? 'rotate-180' : ''"
+            title="Mostrar/ocultar dependencias"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="size-5 transition-transform duration-150"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+            </svg>
+          </button>
+        </div>
+      }
+    </div>
+
+    <!-- Menú móvil -->
+    <div class="block md:hidden">
+      <button
+        type="button"
+        class="btn-icon"
+        (click)="onToggleActions(true)"
+        title="Acciones"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          class="size-5"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
+          />
+        </svg>
+      </button>
+
+      <div class="relative">
+        @if (showActions()) {
+          <div
+            class="card absolute right-0 z-10 min-w-32 overflow-hidden p-1 text-[.8rem]"
+            (appClickOutside)="onToggleActions(false)"
+          >
+            <div
+              class="cursor-pointer rounded-md px-3 py-2 text-ink transition-colors duration-150 hover:bg-surface-sunken"
+              (click)="onShowCreateModal({ id, name, code, areaTypeId }); onToggleActions(false)"
+              (keydown)="onShowCreateModal({ id, name, code, areaTypeId }); onToggleActions(false)"
+              tabindex="0"
+            >
+              Añadir
+            </div>
+            <div
+              class="cursor-pointer rounded-md px-3 py-2 text-ink transition-colors duration-150 hover:bg-surface-sunken"
+              (click)="
+                onShowEditModal({ id, name, parentId, parentName, code, areaTypeId });
+                onToggleActions(false)
+              "
+              (keydown)="
+                onShowEditModal({ id, name, parentId, parentName, code, areaTypeId });
+                onToggleActions(false)
+              "
+              tabindex="0"
+            >
+              Editar
+            </div>
+            <div
+              class="cursor-pointer rounded-md px-3 py-2 text-error transition-colors duration-150 hover:bg-error-bg"
+              (click)="onShowDeleteConfirmationModal({ id, name, code }); onToggleActions(false)"
+              (keydown)="onShowDeleteConfirmationModal({ id, name, code }); onToggleActions(false)"
+              tabindex="0"
+            >
+              Borrar
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+</div>
+
+@if (showDependencies) {
+  <div [ngClass]="divisionLevel >= 0 ? 'ml-4 border-l border-border pl-4' : ''">
+    @for (structure of dependencies; track structure.id) {
+      <app-structure-panel
+        [id]="structure.id"
+        [name]="structure.name"
+        [parentId]="id"
+        [parentName]="name"
+        [areaTypeId]="structure.areaTypeId"
+        [areaName]="structure.areaType.name"
+        [code]="structure.code"
+        [divisionLevel]="divisionLevel + 1"
+        [dependencies]="structure.dependencies"
+        [showDependencies]="structure.showDependencies"
+        [onShowDependencies]="onShowDependencies"
+        [onShowCreateModal]="onShowCreateModal"
+        [onShowEditModal]="onShowEditModal"
+        [onShowDeleteConfirmationModal]="onShowDeleteConfirmationModal"
+      />
+    }
+  </div>
+}

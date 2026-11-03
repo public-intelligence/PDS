@@ -1,0 +1,23 @@
+<form
+  [formGroup]="formGroup()"
+  (ngSubmit)="handleSubmit()"
+  novalidate
+  class="flex flex-col gap-0"
+>
+  @if (title()) {
+    <div class="mb-6">
+      <h2 class="font-poppins text-xl font-semibold text-ink-heading">{{ title() }}</h2>
+      @if (description()) {
+        <p class="mt-1 text-sm text-ink-muted">{{ description() }}</p>
+      }
+    </div>
+  }
+
+  <div class="flex flex-col gap-4">
+    <ng-content />
+  </div>
+
+  <div class="mt-6">
+    <ng-content select="[form-actions]" />
+  </div>
+</form>

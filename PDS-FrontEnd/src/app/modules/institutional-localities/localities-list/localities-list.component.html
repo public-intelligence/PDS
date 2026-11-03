@@ -1,0 +1,146 @@
+<app-crud-page>
+  <div slot="actions" class="flex items-center gap-3">
+    <!-- Segmented control: Tabla / Mapa -->
+    <div class="segmented" role="tablist" aria-label="Vista">
+      <button
+        type="button"
+        (click)="setView('table')"
+        class="segmented-item"
+        [class.segmented-item-active]="viewMode() === 'table'"
+        [attr.aria-selected]="viewMode() === 'table'"
+      >
+        <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path
+            fill-rule="evenodd"
+            d="M3 4.5A1.5 1.5 0 0 1 4.5 3h11A1.5 1.5 0 0 1 17 4.5v11a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 15.5v-11ZM4.5 7h11v3h-11V7Zm0 4.5h11V15h-11v-3.5Z"
+            clip-rule="evenodd"
+          />
+        </svg>
+        Tabla
+      </button>
+      <button
+        type="button"
+        (click)="setView('map')"
+        class="segmented-item"
+        [class.segmented-item-active]="viewMode() === 'map'"
+        [attr.aria-selected]="viewMode() === 'map'"
+      >
+        <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path
+            fill-rule="evenodd"
+            d="M10 2a5 5 0 0 0-5 5c0 3.06 3.4 7.34 4.7 8.86a.4.4 0 0 0 .6 0C11.6 14.34 15 10.06 15 7a5 5 0 0 0-5-5Zm0 6.75A1.75 1.75 0 1 1 10 5.25a1.75 1.75 0 0 1 0 3.5Z"
+            clip-rule="evenodd"
+          />
+        </svg>
+        Mapa
+      </button>
+    </div>
+    <button type="button" class="btn-primary" (click)="openCreate()">
+      <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M10 4.75a.75.75 0 0 1 .75.75v3.75h3.75a.75.75 0 0 1 0 1.5h-3.75v3.75a.75.75 0 0 1-1.5 0v-3.75H5.5a.75.75 0 0 1 0-1.5h3.75V5.5a.75.75 0 0 1 .75-.75Z" />
+      </svg>
+      Nueva localidad
+    </button>
+  </div>
+
+  <form slot="filter" [formGroup]="filterForm" class="grid grid-cols-1 gap-3 md:grid-cols-4">
+    <app-custom-input formControlName="nombre" label="Buscar" placeholder="Nombre o código..." />
+    <app-custom-select formControlName="tipoId" label="Tipo" [options]="tipoOptions()" placeholder="Todos" />
+    <app-custom-select formControlName="estadoId" label="Estado" [options]="estadoOptions()" placeholder="Todos" />
+    <app-custom-select
+      formControlName="provinciaId"
+      label="Provincia"
+      [options]="provinciaOptions()"
+      placeholder="Todas"
+    />
+    <app-custom-select formControlName="paisId" label="País" [options]="paisOptions()" placeholder="Todos" />
+    @if (showFunciones) {
+      <app-custom-select formControlName="funcionId" label="Función" [options]="funcionOptions()" placeholder="Todas" />
+    }
+    @if (canFilterManaged()) {
+      <label class="flex items-center gap-1.5 self-center text-sm text-ink-muted">
+        <input type="checkbox" formControlName="soloGestiono" /> Solo las que gestiono
+      </label>
+    }
+  </form>
+
+  <div slot="table" class="h-full">
+    @if (viewMode() === 'table') {
+      <app-table
+        [headers]="headers"
+        [columnData]="rows()"
+        [isLoading]="isLoading()"
+        noDataDescription="No hay localidades registradas"
+      />
+    } @else {
+      <app-localities-map [query]="query()" />
+    }
+  </div>
+
+  @if (viewMode() === 'table' && totalItems() > 0) {
+    <div
+      slot="pagination"
+      class="flex items-center justify-between border-t border-border px-6 py-3 text-sm text-ink-muted"
+    >
+      <span class="tabular-nums">
+        Mostrando {{ rangeFrom() }}–{{ rangeTo() }} de {{ totalItems() }}
+      </span>
+      <div class="flex items-center gap-1">
+        <button
+          type="button"
+          class="btn-ghost btn-sm"
+          [disabled]="currentPage() <= 1"
+          (click)="setPage(currentPage() - 1)"
+        >
+          <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path
+              fill-rule="evenodd"
+              d="M12.79 5.23a.75.75 0 0 1 0 1.06L9.06 10l3.73 3.71a.75.75 0 1 1-1.06 1.06l-4.25-4.24a.75.75 0 0 1 0-1.06l4.25-4.24a.75.75 0 0 1 1.06 0Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          Anterior
+        </button>
+        <button
+          type="button"
+          class="btn-ghost btn-sm"
+          [disabled]="currentPage() >= totalPages()"
+          (click)="setPage(currentPage() + 1)"
+        >
+          Siguiente
+          <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path
+              fill-rule="evenodd"
+              d="M7.21 14.77a.75.75 0 0 1 0-1.06L10.94 10 7.21 6.29a.75.75 0 1 1 1.06-1.06l4.25 4.24a.75.75 0 0 1 0 1.06l-4.25 4.24a.75.75 0 0 1-1.06 0Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  }
+</app-crud-page>
+
+<app-locality-form-modal
+  [isOpen]="isFormOpen()"
+  [localityId]="editingId()"
+  (closed)="onFormClosed()"
+  (saved)="onFormSaved()"
+/>
+
+<app-locality-suspend-modal
+  [isOpen]="isSuspendOpen()"
+  [mode]="suspendMode()"
+  [localityId]="targetId()"
+  [localityName]="targetName()"
+  (closed)="isSuspendOpen.set(false)"
+  (done)="onSuspendDone()"
+/>
+
+<app-locality-close-modal
+  [isOpen]="isCloseOpen()"
+  [localityId]="targetId()"
+  [localityName]="targetName()"
+  (closed)="isCloseOpen.set(false)"
+  (done)="onCloseDone()"
+/>

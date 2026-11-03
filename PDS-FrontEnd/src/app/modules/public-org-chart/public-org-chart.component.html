@@ -1,0 +1,98 @@
+<div class="flex min-h-screen flex-col bg-surface">
+  <!-- Barra gubernamental -->
+  <div class="bg-surface-raised text-brand">
+    <div class="mx-auto flex max-w-7xl items-center gap-2 px-6 py-1.5 text-[11px] font-medium tracking-wide">
+      <span class="font-poppins font-semibold">República Dominicana</span>
+      <span class="text-border-strong">|</span>
+      <span class="text-ink-muted">Gobierno de la República Dominicana</span>
+    </div>
+    <!-- Filete tricolor institucional: azul → bandera roja -->
+    <div class="h-[3px] w-full bg-linear-to-r from-[#003876] via-[#003876] to-[#ee2a24]"></div>
+  </div>
+
+  <!-- Encabezado institucional -->
+  <header class="bg-[#003876] text-white">
+    <div class="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-center gap-4">
+        <img
+          src="assets/images/cupula-gob-azul.webp"
+          alt="Escudo institucional"
+          class="h-12 w-12 shrink-0 rounded-lg bg-white/95 p-1.5 ring-1 ring-white/20"
+        />
+        <div>
+          <h1 class="font-poppins !text-xl !leading-tight !font-semibold !text-white sm:!text-2xl">
+            {{ orgName() ?? 'Organigrama Institucional' }}
+          </h1>
+          <p class="!text-sm !text-blue-100">Estructura organizativa vigente — información pública</p>
+        </div>
+      </div>
+
+      @if (version(); as v) {
+        <!-- Chip de versión: tarjeta esmerilada sobre la banda azul -->
+        <div class="rounded-xl bg-white/10 px-4 py-3 text-sm text-blue-50 shadow-sm ring-1 ring-white/15 backdrop-blur-sm">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="font-poppins rounded-md bg-white/15 px-2 py-0.5 text-xs font-semibold tracking-wide tabular-nums">
+              VERSIÓN {{ v.number }}
+            </span>
+            @if (v.status) {
+              <span [class]="versionStatusBadge(v.status)">{{ versionStatusLabel(v.status) }}</span>
+            }
+            @if (v.effectiveFrom) {
+              <span class="text-blue-100 tabular-nums">vigente desde {{ v.effectiveFrom }}</span>
+            }
+          </div>
+          @if (v.legalInstrument; as li) {
+            <div class="mt-1 text-xs text-blue-200 tabular-nums">{{ li.number }} · {{ li.date }}</div>
+          }
+        </div>
+      }
+    </div>
+  </header>
+
+  <main class="mx-auto w-full max-w-7xl flex-1 p-4">
+    @if (!firstLoadDone()) {
+      <div class="flex h-[60vh] flex-col items-center justify-center gap-4 text-ink-subtle">
+        <span class="loader"></span>
+        <p class="!text-sm">Cargando organigrama…</p>
+      </div>
+    } @else if (notFound() && !nodes().length && !versions().length) {
+      <div class="card flex flex-col items-center justify-center gap-2 p-10 text-center">
+        <svg class="size-10 text-ink-subtle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2a3 3 0 0 1 3-3 3 3 0 0 0 3-3V9m-3 9h.01M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18Z" />
+        </svg>
+        <p class="text-ink-muted">No hay un organigrama público disponible.</p>
+      </div>
+    } @else {
+      <app-org-chart-viewer
+        [nodes]="nodes()"
+        [versions]="versions()"
+        [currentVersion]="version()"
+        [loading]="isLoading()"
+        [showHistoryControls]="true"
+        title="Organigrama Institucional"
+        (dateSelected)="onDateSelected($event)"
+        (versionSelected)="onVersionSelected($event)"
+      />
+      @if (notFound()) {
+        <div class="badge-warning mt-3 w-full justify-start! rounded-lg! px-4 py-2 text-sm">
+          <svg class="size-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path
+              fill-rule="evenodd"
+              d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495ZM10 6a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 6Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          No hay un organigrama para la fecha o versión seleccionada.
+        </div>
+      }
+    }
+  </main>
+
+  <!-- Pie público -->
+  <footer class="border-t border-border bg-surface-raised">
+    <div class="mx-auto flex max-w-7xl flex-col gap-1 px-6 py-4 text-xs text-ink-muted sm:flex-row sm:items-center sm:justify-between">
+      <span>{{ orgName() ?? 'Ministerio' }} — Información pública</span>
+      <span class="tabular-nums">Generado el {{ generatedAt }}</span>
+    </div>
+  </footer>
+</div>

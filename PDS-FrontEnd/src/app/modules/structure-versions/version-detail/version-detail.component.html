@@ -1,0 +1,110 @@
+@if (isLoading()) {
+  <p class="p-6 text-sm text-ink-subtle">Cargando…</p>
+} @else if (version(); as v) {
+  <div class="flex flex-col gap-4 p-4">
+    <!-- Header block -->
+    <div class="flex flex-col gap-3">
+      <a routerLink="/structure-versions" class="btn-ghost btn-sm w-fit">
+        <svg class="size-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M12.5 5 7.5 10l5 5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        Volver a versiones
+      </a>
+
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div class="flex flex-col gap-3">
+          <div class="flex flex-wrap items-center gap-3">
+            <h1 class="font-poppins text-2xl font-semibold text-ink-heading">
+              {{ versionLabel(v) }}
+            </h1>
+            <span [class]="badge(v.status)">{{ statusLabels[v.status] }}</span>
+          </div>
+          <app-version-workflow-stepper [status]="v.status" />
+        </div>
+
+        <!-- Acciones (según estado). Sin handlers en el componente: se muestran como navegación/enlaces disponibles. -->
+        <div class="flex flex-wrap items-center gap-2">
+          @if (v.legalInstrument?.documentUrl; as docUrl) {
+            <a [href]="docUrl" target="_blank" rel="noopener" class="btn-secondary btn-sm">
+              <svg class="size-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                <path d="M6 2.5h5l3 3V16a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 5 16V4a1.5 1.5 0 0 1 1.5-1.5Z" stroke-linejoin="round" />
+                <path d="M11 2.5V6h3.5" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              Documento legal
+            </a>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
+      <div class="flex flex-col gap-4">
+        <!-- Datos clave -->
+        <div class="card p-4">
+          <h2 class="text-sm font-semibold uppercase tracking-wide text-ink-subtle">Datos de la versión</h2>
+          <dl class="mt-4 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
+            <div class="flex flex-col gap-0.5">
+              <dt class="text-xs uppercase tracking-wide text-ink-subtle">Vigencia desde</dt>
+              <dd class="text-sm text-ink tabular-nums">{{ v.effectiveFrom ?? '—' }}</dd>
+            </div>
+            <div class="flex flex-col gap-0.5">
+              <dt class="text-xs uppercase tracking-wide text-ink-subtle">Vigencia hasta</dt>
+              <dd class="text-sm text-ink tabular-nums">{{ v.effectiveTo ?? (v.status === 'Published' ? 'vigente' : '—') }}</dd>
+            </div>
+            <div class="flex flex-col gap-0.5">
+              <dt class="text-xs uppercase tracking-wide text-ink-subtle">Pública</dt>
+              <dd class="text-sm text-ink">{{ v.isPublic ? 'Sí' : 'No' }}</dd>
+            </div>
+            <div class="flex flex-col gap-0.5">
+              <dt class="text-xs uppercase tracking-wide text-ink-subtle">Creada por</dt>
+              <dd class="text-sm text-ink">{{ v.createdByName ?? '—' }}</dd>
+            </div>
+            <div class="flex flex-col gap-0.5">
+              <dt class="text-xs uppercase tracking-wide text-ink-subtle">Aprobada por</dt>
+              <dd class="text-sm text-ink">{{ v.approvedByName ?? '—' }}</dd>
+            </div>
+            <div class="flex flex-col gap-0.5">
+              <dt class="text-xs uppercase tracking-wide text-ink-subtle">Publicada por</dt>
+              <dd class="text-sm text-ink">{{ v.publishedByName ?? '—' }}</dd>
+            </div>
+          </dl>
+        </div>
+
+        @if (v.legalInstrument; as li) {
+          <!-- Instrumento legal -->
+          <div class="card p-4">
+            <h2 class="text-sm font-semibold uppercase tracking-wide text-ink-subtle">Instrumento legal</h2>
+            <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+              <p class="text-sm text-ink">
+                <span class="font-medium text-ink-heading">{{ typeLabels[li.type] }} {{ li.number }}</span>
+                <span class="text-ink-muted">
+                  · <span class="tabular-nums">{{ li.date }}</span> · {{ li.issuingAuthority }}
+                </span>
+              </p>
+              @if (li.documentUrl) {
+                <a [href]="li.documentUrl" target="_blank" rel="noopener" class="btn-secondary btn-sm">
+                  <svg class="size-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                    <path d="M6 2.5h5l3 3V16a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 5 16V4a1.5 1.5 0 0 1 1.5-1.5Z" stroke-linejoin="round" />
+                    <path d="M11 2.5V6h3.5" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                  Ver documento
+                </a>
+              }
+            </div>
+          </div>
+        }
+
+        <app-org-chart-viewer
+          [nodes]="nodes()"
+          [currentVersion]="v"
+          [showHistoryControls]="false"
+          title="Organigrama — {{ versionLabel(v) }}"
+        />
+      </div>
+
+      <app-audit-log-panel [logs]="v.auditLogs" />
+    </div>
+  </div>
+} @else {
+  <p class="p-6 text-sm text-ink-subtle">Versión no encontrada.</p>
+}

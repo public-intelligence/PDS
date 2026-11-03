@@ -1,0 +1,66 @@
+<div class="flex flex-col gap-1.5" role="group" [attr.aria-label]="label() || 'Intervalos'">
+  @if (label()) {
+    <span class="field-label leading-none">
+      {{ label() }}
+      @if (required()) {
+        <span class="ml-0.5 text-error">*</span>
+      }
+    </span>
+  }
+
+  @for (interval of intervals(); track $index) {
+    <div class="flex items-center gap-2">
+      <select
+        class="field-control"
+        aria-label="Desde"
+        [disabled]="disabled()"
+        [attr.aria-invalid]="error() ? 'true' : null"
+        [attr.aria-describedby]="error() ? errorId() : null"
+        (change)="update($index, 'inicio', $event)"
+        (blur)="onBlur()"
+      >
+        @for (time of optionsWith(startOptions, interval.inicio); track time) {
+          <option [value]="time" [selected]="time === interval.inicio">{{ time }}</option>
+        }
+      </select>
+      <span class="text-sm text-ink-subtle" aria-hidden="true">–</span>
+      <select
+        class="field-control"
+        aria-label="Hasta"
+        [disabled]="disabled()"
+        [attr.aria-invalid]="error() ? 'true' : null"
+        [attr.aria-describedby]="error() ? errorId() : null"
+        (change)="update($index, 'fin', $event)"
+        (blur)="onBlur()"
+      >
+        @for (time of optionsWith(endOptions, interval.fin); track time) {
+          <option [value]="time" [selected]="time === interval.fin">{{ time }}</option>
+        }
+      </select>
+      @if (!disabled()) {
+        <button
+          type="button"
+          aria-label="Quitar intervalo"
+          class="btn-icon hover:bg-error-bg! hover:text-error!"
+          (click)="remove($index)"
+        >
+          <svg class="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path
+              d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22z"
+            />
+          </svg>
+        </button>
+      }
+    </div>
+  } @empty {
+    <p class="text-sm text-ink-subtle">{{ emptyText() }}</p>
+  }
+
+  @if (canAdd()) {
+    <button type="button" class="btn-secondary btn-sm self-start" (click)="add()">
+      + Agregar intervalo
+    </button>
+  }
+
+  <p [id]="errorId()" class="field-error h-3.5" aria-live="polite">{{ error() }}</p>
+</div>

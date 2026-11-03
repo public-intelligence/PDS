@@ -1,0 +1,34 @@
+<app-custom-modal
+  [isOpen]="isOpen()"
+  [title]="isEdit ? 'Editar calendario de feriados' : 'Nuevo calendario de feriados'"
+  size="lg"
+  [closeOnBackdrop]="false"
+  [isLoading]="isLoading()"
+  (closed)="onClose()"
+>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+    <app-form-error-banner [message]="formError()" [canReload]="isStale()" (reload)="onReload()" />
+
+    <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+      <app-custom-input formControlName="codigo" label="Código" placeholder="DO-NAC" [required]="true" [errorMessage]="codigoError" />
+      <app-custom-input formControlName="nombre" label="Nombre" [required]="true" [errorMessage]="nombreError" />
+    </div>
+    <app-custom-textarea formControlName="descripcion" label="Descripción" [rows]="2" />
+    <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+      <app-custom-select-search formControlName="paisId" label="País" [options]="paisOptions()" />
+      <app-custom-select formControlName="ambito" label="Ámbito" [required]="true" [options]="ambitoOptions" />
+    </div>
+    <div>
+      <app-custom-select-search formControlName="localidadGestoraId" label="Localidad gestora" [options]="localidadOptions()" />
+      <p class="text-xs text-ink-subtle">Sus gestores de calendario podrán mantener los feriados.</p>
+    </div>
+    <label class="flex items-center gap-1.5 text-sm text-ink">
+      <input type="checkbox" formControlName="activo" /> Activo
+    </label>
+
+    <div modal-actions class="flex justify-end gap-3 border-t border-border px-6 py-4">
+      <button type="button" class="btn-ghost" (click)="onClose()">Cancelar</button>
+      <button type="submit" class="btn-primary" [disabled]="isSaving()">{{ isEdit ? 'Guardar' : 'Crear' }}</button>
+    </div>
+  </form>
+</app-custom-modal>

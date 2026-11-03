@@ -1,0 +1,80 @@
+<app-custom-modal [isOpen]="isOpen()" title="Cambiar horario laboral" size="xl" [closeOnBackdrop]="false"
+  (closed)="onClose()">
+  <form id="scheduleForm" [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+    <app-form-error-banner [message]="formError()" />
+
+    <div class="md:w-1/2">
+      <app-custom-input type="date" formControlName="vigenteDesde" label="Vigente desde" [required]="true"
+        [errorMessage]="vigenteDesdeError" />
+    </div>
+    @if (isBackdated && isAdmin()) {
+    <p class="rounded-lg border border-warning-border bg-warning-bg px-3 py-2 text-sm text-warning-text">
+      Cambiar el horario de fechas pasadas recalcula plazos de solicitudes ya transcurridos.
+    </p>
+    }
+
+    <fieldset>
+      <legend class="field-label">Plantilla</legend>
+      <div class="segmented mt-1 flex w-full flex-wrap divide-x divide-border">
+        @for (preset of presets; track preset.id) {
+        <button type="button" class="segmented-item flex-1 justify-center" [class.segmented-item-active]="activePreset() === preset.id"
+          [attr.aria-pressed]="activePreset() === preset.id" (click)="applyPreset(preset.id, preset.days)">
+          {{ preset.label }}
+        </button>
+        }
+        <button type="button" class="segmented-item flex-1 justify-center" [class.segmented-item-active]="activePreset() === copyPreset"
+          [attr.aria-pressed]="activePreset() === copyPreset" (click)="chooseCopy()">
+          Copiar de otra localidad
+        </button>
+      </div>
+    </fieldset>
+    @if (activePreset() === copyPreset) {
+    <app-custom-select-search formControlName="copiarDeId" label="Localidad de origen" [options]="localidadOptions()" />
+    }
+
+    <div class="flex cursor-pointer items-center text-sm text-ink gap-2">
+      <input type="checkbox" formControlName="personalizar" />
+      <span class="leading-none">Personalizar por día</span>
+    </div>
+
+    @if (form.controls.personalizar.value) {
+    <div formGroupName="porDia" class="flex flex-col gap-2">
+      @for (day of days; track day) {
+      <div class="grid grid-cols-1 gap-2 rounded-lg border border-border bg-surface-sunken p-3 md:grid-cols-[7rem_1fr]">
+        <span class="pt-2 text-sm font-medium text-ink">{{ dayLong[day] }}</span>
+        <app-intervals-editor [formControlName]="day" emptyText="Cerrado" />
+      </div>
+      }
+    </div>
+    } @else {
+    <fieldset>
+      <legend class="field-label">Días laborables</legend>
+      <div class="mt-1 flex flex-wrap gap-2">
+        @for (day of days; track day) {
+        <button type="button"
+          class="size-9 cursor-pointer rounded-full text-sm font-medium ring-1 ring-border transition-colors"
+          [class]="isDaySelected(day) ? 'bg-brand text-white' : 'bg-surface-raised text-ink-muted'"
+          [attr.aria-pressed]="isDaySelected(day)" [attr.aria-label]="dayLong[day]" [title]="dayLong[day]"
+          (click)="toggleDay(day)">
+          {{ dayInitial[day] }}
+        </button>
+        }
+      </div>
+    </fieldset>
+    <app-intervals-editor formControlName="horario" label="Horario" />
+    }
+
+    <div class="rounded-lg border border-border bg-surface-sunken px-3 py-2 text-sm text-ink" aria-live="polite">
+      {{ summary }}
+    </div>
+    <p class="field-error h-3.5" aria-live="polite">{{ weekError }}</p>
+
+    <app-custom-textarea formControlName="motivo" label="Motivo" [required]="isBackdated" [rows]="2"
+      [errorMessage]="motivoError" />
+  </form>
+
+  <div modal-actions class="flex justify-end gap-3 border-t border-border px-6 py-4">
+    <button type="button" class="btn-ghost" (click)="onClose()">Cancelar</button>
+    <button type="submit" form="scheduleForm" class="btn-primary" [disabled]="isSaving()">Guardar horario</button>
+  </div>
+</app-custom-modal>

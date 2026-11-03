@@ -1,0 +1,24 @@
+<app-custom-modal
+  [isOpen]="isOpen()"
+  [title]="isEditMode ? 'Editar grupo ocupacional' : 'Nuevo grupo ocupacional'"
+  size="sm"
+  (closed)="onClose()"
+  [closeOnBackdrop]="false"
+>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+    <app-custom-input
+      formControlName="name"
+      label="Nombre"
+      placeholder="Ej: Profesional"
+      [required]="true"
+      [errorMessage]="nameError"
+    />
+
+    <div modal-actions class="flex justify-end gap-3 border-t border-border px-6 py-4">
+      <button type="button" class="btn-ghost" (click)="onClose()">Cancelar</button>
+      <button type="submit" class="btn-primary" [disabled]="isSaving()">
+        {{ isEditMode ? 'Guardar cambios' : 'Crear' }}
+      </button>
+    </div>
+  </form>
+</app-custom-modal>

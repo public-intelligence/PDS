@@ -1,0 +1,33 @@
+<app-crud-page>
+  <button slot="actions" type="button" (click)="createDraft()" class="btn-primary">
+    <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m-7-7h14" />
+    </svg>
+    Nuevo borrador
+  </button>
+
+  <app-table
+    slot="table"
+    [headers]="headers"
+    [columnData]="data()"
+    [isLoading]="isLoading()"
+    noDataDescription="No hay versiones registradas"
+  />
+</app-crud-page>
+
+<app-version-review-modal
+  [isOpen]="reviewModalOpen()"
+  [mode]="reviewMode()"
+  [versionId]="selectedVersionId()"
+  [versionName]="selectedVersionName()"
+  (closed)="onReviewClosed($event)"
+/>
+
+<app-version-publish-modal
+  [isOpen]="publishModalOpen()"
+  [versionId]="selectedVersionId()"
+  [versionName]="selectedVersionName()"
+  (closed)="onPublishClosed($event)"
+/>
+
+<app-confirmation-modal />

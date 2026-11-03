@@ -1,0 +1,321 @@
+<div class="flex flex-col gap-3">
+  <!-- Barra de herramientas -->
+  <div class="card flex flex-col gap-3 p-4 text-sm">
+    <!-- Grupo: Filtros -->
+    <div class="flex flex-col gap-2">
+      <span class="text-[11px] font-semibold tracking-wide text-ink-subtle uppercase">Filtros</span>
+      <div class="flex flex-wrap items-end gap-3">
+      <div class="flex flex-col gap-1">
+        <label [attr.for]="ids.root" class="text-[11px] font-medium text-ink-muted">Unidad raíz</label>
+        <select
+          [id]="ids.root"
+          class="!h-9 !text-sm"
+          [value]="rootUnitId()"
+          (change)="onRootChange($any($event.target).value)"
+          aria-label="Unidad raíz"
+        >
+          <option value="">Toda la estructura</option>
+          @for (opt of rootOptions(); track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label [attr.for]="ids.level" class="text-[11px] font-medium text-ink-muted">Profundidad</label>
+        <select
+          [id]="ids.level"
+          class="!h-9 !text-sm"
+          [value]="maxLevelSel()"
+          (change)="onMaxLevelChange($any($event.target).value)"
+          aria-label="Profundidad máxima"
+        >
+          <option value="">Todos los niveles</option>
+          @for (lvl of levelOptions(); track lvl) {
+            <option [value]="lvl">Hasta nivel {{ lvl }}</option>
+          }
+        </select>
+      </div>
+
+      <label class="flex h-9 cursor-pointer items-center gap-2 self-end rounded-lg border border-border px-3 text-ink-muted">
+        <input
+          type="checkbox"
+          class="!h-4 !w-4 !p-0 mt-1 relative top-0.5 mr-1 accent-brand"
+          [checked]="showPositions()"
+          (change)="onTogglePositions($any($event.target).checked)"
+        />
+        Mostrar cargos
+      </label>
+
+      @if (showHistoryControls()) {
+        <div class="flex flex-col gap-1">
+          <label [attr.for]="ids.date" class="text-[11px] font-medium text-slate-500">A una fecha</label>
+          <input
+            [id]="ids.date"
+            type="date"
+            class="!h-9 !text-sm"
+            [value]="selectedDate()"
+            (change)="onDateChange($any($event.target).value)"
+            aria-label="Organigrama a una fecha"
+          />
+        </div>
+
+        @if (versions().length) {
+          <div class="flex flex-col gap-1">
+            <label [attr.for]="ids.version" class="text-[11px] font-medium text-slate-500">Versión</label>
+            <select
+              [id]="ids.version"
+              class="!h-9 !text-sm"
+              [value]="selectedVersionId()"
+              (change)="onVersionChange($any($event.target).value)"
+              aria-label="Versión"
+            >
+              <option value="">Versión vigente</option>
+              @for (v of versions(); track v.id) {
+                <option [value]="v.id">
+                  v{{ v.number }} · {{ v.effectiveFrom }}{{ v.effectiveTo ? ' → ' + v.effectiveTo : ' (vigente)' }}
+                </option>
+              }
+            </select>
+          </div>
+        }
+      }
+      </div>
+    </div>
+
+    <!-- Divisor -->
+    <div class="border-t border-slate-100"></div>
+
+    <!-- Grupo: Vista / Exportar -->
+    <div class="flex flex-col gap-2">
+      <span class="text-[11px] font-semibold tracking-wide text-slate-400 uppercase">Vista / Exportar</span>
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <!-- Modo de disposición -->
+        <div class="flex items-center gap-1" role="group" aria-label="Modo de disposición">
+          <button
+            type="button"
+            class="!h-9 !rounded-lg !px-3 !py-0 !text-sm !normal-case border"
+            [class.!bg-white]="layoutMode() !== 'auto'"
+            [class.!text-slate-600]="layoutMode() !== 'auto'"
+            [class.border-slate-300]="layoutMode() !== 'auto'"
+            [class.border-transparent]="layoutMode() === 'auto'"
+            [attr.aria-pressed]="layoutMode() === 'auto'"
+            (click)="setLayoutMode('auto')"
+          >
+            Auto{{ layoutMode() === 'auto' ? (effectiveMode() === 'compact' ? ' · Compacto' : ' · Árbol') : '' }}
+          </button>
+          <button
+            type="button"
+            class="!h-9 !rounded-lg !px-3 !py-0 !text-sm !normal-case border"
+            [class.!bg-white]="layoutMode() !== 'tree'"
+            [class.!text-slate-600]="layoutMode() !== 'tree'"
+            [class.border-slate-300]="layoutMode() !== 'tree'"
+            [class.border-transparent]="layoutMode() === 'tree'"
+            [attr.aria-pressed]="layoutMode() === 'tree'"
+            (click)="setLayoutMode('tree')"
+          >
+            Árbol
+          </button>
+          <button
+            type="button"
+            class="!h-9 !rounded-lg !px-3 !py-0 !text-sm !normal-case border"
+            [class.!bg-white]="layoutMode() !== 'compact'"
+            [class.!text-slate-600]="layoutMode() !== 'compact'"
+            [class.border-slate-300]="layoutMode() !== 'compact'"
+            [class.border-transparent]="layoutMode() === 'compact'"
+            [attr.aria-pressed]="layoutMode() === 'compact'"
+            (click)="setLayoutMode('compact')"
+          >
+            Compacto
+          </button>
+        </div>
+        <span class="hidden h-6 w-px bg-slate-300 sm:block"></span>
+        <div class="flex items-center gap-1">
+          <button type="button" class="!h-9 !w-9 !rounded-lg !bg-white !px-0 !py-0 !text-slate-600 !normal-case border border-slate-300" (click)="zoomOut()" aria-label="Alejar">−</button>
+          <span class="w-12 text-center text-xs font-medium text-slate-500 tabular-nums" aria-live="polite">{{ zoomPercent() }}%</span>
+          <button type="button" class="!h-9 !w-9 !rounded-lg !bg-white !px-0 !py-0 !text-slate-600 !normal-case border border-slate-300" (click)="zoomIn()" aria-label="Acercar">＋</button>
+          <button type="button" class="!h-9 !rounded-lg !bg-white !px-3 !py-0 !text-slate-600 !normal-case border border-slate-300" (click)="fitToView()">Ajustar</button>
+          <button type="button" class="!h-9 !rounded-lg !bg-white !px-3 !py-0 !text-slate-600 !normal-case border border-slate-300" (click)="expandAll()">Expandir</button>
+          <button type="button" class="!h-9 !rounded-lg !bg-white !px-3 !py-0 !text-slate-600 !normal-case border border-slate-300" (click)="collapseAll()">Colapsar</button>
+        </div>
+        <span class="hidden h-6 w-px bg-slate-300 sm:block"></span>
+        <div class="flex items-center gap-1">
+          <button type="button" class="!h-9 !rounded-lg !px-3 !py-0 !text-sm !normal-case" (click)="exportPdf()">PDF</button>
+          <button type="button" class="!h-9 !rounded-lg !px-3 !py-0 !text-sm !normal-case" (click)="exportPng()">PNG</button>
+          <button type="button" class="!h-9 !rounded-lg !px-3 !py-0 !text-sm !normal-case" (click)="exportSvg()">SVG</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lienzo del organigrama -->
+  <div
+    #canvas
+    class="relative h-[70vh] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+    (wheel)="onWheel($event)"
+    (pointerdown)="onPointerDown($event)"
+    (pointermove)="onPointerMove($event)"
+    (pointerup)="onPointerUp()"
+    (pointerleave)="onPointerUp()"
+  >
+    @if (!layout().nodes.length) {
+      <div class="flex h-full items-center justify-center px-6 text-center text-slate-400">
+        No hay unidades para mostrar en el organigrama.
+      </div>
+    } @else {
+      <svg
+        #svg
+        class="select-none"
+        [attr.width]="layout().width"
+        [attr.height]="layout().height"
+        [attr.viewBox]="layout().viewBox"
+        [style.transform]="svgTransform()"
+        style="position: absolute; top: 0; left: 0; transform-origin: 0 0; cursor: grab"
+        font-family="Roboto, Arial, sans-serif"
+      >
+        <!-- Conectores -->
+        @for (link of layout().links; track $index) {
+          <path [attr.d]="linkPath(link)" fill="none" stroke="#cbd5e1" stroke-width="1.5" />
+        }
+
+        <!-- Nodos -->
+        @for (item of layout().nodes; track item.node.sourceUnitId) {
+          <g [attr.transform]="'translate(' + item.x + ',' + item.y + ')'">
+            <!-- Sombra suave (rect desplazado, sin trazo) — segura para exportación -->
+            <rect
+              [attr.x]="-boxWidth / 2 + 1.5"
+              [attr.y]="-boxH() / 2 + 2.5"
+              [attr.width]="boxWidth"
+              [attr.height]="boxH()"
+              rx="10"
+              fill="#0f172a"
+              fill-opacity="0.06"
+            />
+
+            <!-- Tarjeta -->
+            <rect
+              [attr.x]="-boxWidth / 2"
+              [attr.y]="-boxH() / 2"
+              [attr.width]="boxWidth"
+              [attr.height]="boxH()"
+              rx="10"
+              [attr.fill]="nodeFill(item.node)"
+              [attr.stroke]="nodeStroke(item.node)"
+              stroke-width="1.25"
+            />
+
+            <!-- Barra de acento (borde izquierdo, ajustada al radio) -->
+            <rect
+              [attr.x]="-boxWidth / 2"
+              [attr.y]="-boxH() / 2 + 10"
+              width="4"
+              [attr.height]="boxH() - 20"
+              [attr.fill]="accentColor(item.node)"
+            />
+
+            <text
+              x="0"
+              [attr.y]="-boxH() / 2 + 24"
+              text-anchor="middle"
+              font-size="13"
+              font-weight="700"
+              fill="#0f172a"
+            >
+              {{ truncate(item.node.name) }}
+            </text>
+
+            <text
+              x="0"
+              [attr.y]="-boxH() / 2 + 40"
+              text-anchor="middle"
+              font-size="10"
+              fill="#64748b"
+            >
+              {{ item.node.code }}{{ item.node.areaTypeName ? ' · ' + item.node.areaTypeName : '' }}
+            </text>
+
+            @if (showPositions()) {
+              <line
+                [attr.x1]="-boxWidth / 2 + 10"
+                [attr.x2]="boxWidth / 2 - 10"
+                [attr.y1]="-boxH() / 2 + 50"
+                [attr.y2]="-boxH() / 2 + 50"
+                stroke="#e2e8f0"
+                stroke-width="1"
+              />
+              @for (pos of visiblePositions(item.node); track pos.positionId; let i = $index) {
+                @if (pos.isSupervisor) {
+                  <circle
+                    [attr.cx]="-boxWidth / 2 + 16"
+                    [attr.cy]="-boxH() / 2 + 61 + i * 15"
+                    r="3"
+                    fill="#1a579a"
+                  />
+                }
+                <text
+                  [attr.x]="-boxWidth / 2 + (pos.isSupervisor ? 24 : 12)"
+                  [attr.y]="-boxH() / 2 + 64 + i * 15"
+                  font-size="10"
+                  [attr.font-weight]="pos.isSupervisor ? 600 : 400"
+                  [attr.fill]="pos.isSupervisor ? '#1a579a' : '#475569'"
+                >
+                  {{ truncate(pos.name, 22) }} ({{ pos.authorizedPosts }})
+                </text>
+              }
+              @if (extraPositions(item.node) > 0) {
+                <text
+                  [attr.x]="-boxWidth / 2 + 12"
+                  [attr.y]="-boxH() / 2 + 64 + 4 * 15"
+                  font-size="10"
+                  fill="#94a3b8"
+                >
+                  +{{ extraPositions(item.node) }} más
+                </text>
+              }
+            }
+
+            @if (hasChildren(item.node.sourceUnitId)) {
+              <g
+                [attr.transform]="'translate(0,' + boxH() / 2 + ')'"
+                class="cursor-pointer"
+                (click)="toggleCollapse(item.node.sourceUnitId)"
+              >
+                <circle r="9" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5" />
+                <text text-anchor="middle" y="4" font-size="13" fill="#475569">
+                  {{ isCollapsed(item.node.sourceUnitId) ? '+' : '−' }}
+                </text>
+              </g>
+            }
+          </g>
+        }
+      </svg>
+
+      <!-- Pista de interacción -->
+      <div class="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-slate-900/5 px-3 py-1 text-[11px] text-slate-400">
+        arrastra para mover · rueda para zoom
+      </div>
+
+      <!-- Indicador de zoom -->
+      <div class="pointer-events-none absolute right-3 bottom-3 rounded-md bg-white/80 px-2 py-1 text-[11px] font-medium text-slate-500 ring-1 ring-slate-200">
+        {{ zoomPercent() }}%
+      </div>
+
+      <!-- Leyenda de diferencias (solo en modo comparación) -->
+      @if (diffMap()) {
+        <div class="pointer-events-none absolute top-3 left-3 flex flex-col gap-1 rounded-lg bg-white/90 px-3 py-2 text-[11px] text-slate-600 ring-1 ring-slate-200">
+          <span class="flex items-center gap-2"><span class="inline-block h-3 w-3 rounded-sm" style="background:#e9f9f0;border:1px solid #2ecc71"></span> Creada</span>
+          <span class="flex items-center gap-2"><span class="inline-block h-3 w-3 rounded-sm" style="background:#fdf8e7;border:1px solid #ebc342"></span> Modificada</span>
+          <span class="flex items-center gap-2"><span class="inline-block h-3 w-3 rounded-sm" style="background:#e6f3ff;border:1px solid #0087ff"></span> Reubicada</span>
+          <span class="flex items-center gap-2"><span class="inline-block h-3 w-3 rounded-sm" style="background:#fdecea;border:1px solid #ee2a24"></span> Eliminada</span>
+        </div>
+      }
+    }
+
+    <!-- Capa de carga: sobre el lienzo, no destruye el visor (preserva zoom/pan/selección) -->
+    @if (loading()) {
+      <div class="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-[1px]">
+        <span class="loader"></span>
+      </div>
+    }
+  </div>
+</div>

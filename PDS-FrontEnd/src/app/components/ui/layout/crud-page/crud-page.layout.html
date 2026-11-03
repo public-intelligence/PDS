@@ -1,0 +1,22 @@
+<div class="flex h-full flex-col gap-4 p-6">
+  <div class="flex items-center justify-between gap-4">
+    <div class="min-w-0">
+      <ng-content select="[slot=title]" />
+    </div>
+    <div class="flex items-center gap-2">
+      <ng-content select="[slot=actions]" />
+    </div>
+  </div>
+  @if (showFilters) {
+    <div class="card p-4">
+      <ng-content select="[slot=filter]" />
+    </div>
+  }
+
+  <div class="card flex min-h-[40dvh] flex-1 flex-col overflow-hidden p-0">
+    <div class="min-h-0 flex-1 overflow-hidden">
+      <ng-content select="[slot=table]" />
+    </div>
+    <ng-content select="[slot=pagination]" />
+  </div>
+</div>

@@ -1,0 +1,21 @@
+# Archivos locales y secretos: nunca se versionan
+.DS_Store
+.env
+.npmrc
+
+# Compilación y dependencias
+node_modules/
+dist/
+bin/
+obj/
+.angular/
+.vs/
+*.user
+*.suo
+
+# Proyecto de pruebas con credenciales escritas en el código (las cadenas de conexión con usuario y contraseña).
+# No se versiona mientras esas credenciales sigan ahí.
+PDS-BackEnd/PDS.Tests/
+
+# Configuración personal de Claude Code de cada desarrollador
+.claude/settings.local.json

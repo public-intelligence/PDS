@@ -1,0 +1,57 @@
+<div class="flex flex-col gap-0.5">
+  @if (label()) {
+    <label [for]="id()" class="field-label leading-none">
+      {{ label() }}
+      @if (required()) {
+        <span class="text-error ml-0.5">*</span>
+      }
+    </label>
+  }
+
+  <div class="relative">
+    <select
+      [id]="id()"
+      [disabled]="disabled()"
+      (change)="onSelectChange($event)"
+      (blur)="onBlur()"
+      [class]="selectClasses()"
+      [attr.aria-invalid]="hasError() ? 'true' : null"
+      [attr.aria-describedby]="hasError() ? errorId() : null"
+    >
+      @if (placeholder()) {
+        <option value="" [selected]="!value()" disabled>{{ placeholder() }}</option>
+      }
+      @for (option of options(); track option.value) {
+        <option
+          [value]="option.value"
+          [selected]="option.value === value()"
+          [disabled]="option.disabled ?? false"
+        >
+          {{ option.label }}
+        </option>
+      }
+    </select>
+
+    <div
+      class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-ink-subtle"
+      aria-hidden="true"
+    >
+      <svg class="size-4" viewBox="0 0 16 16" fill="currentColor">
+        <path
+          fill-rule="evenodd"
+          d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06z"
+        />
+      </svg>
+    </div>
+  </div>
+  <p [id]="errorId()" class="field-error h-3.5" aria-live="polite">
+    @if (hasError()) {
+      <svg class="size-3 shrink-0" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <path
+          d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm-.75 4a.75.75 0 0 1 1.5 0v3.5a.75.75 0 0 1-1.5 0V5zm.75 7a.875.875 0 1 1 0-1.75A.875.875 0 0 1 8 12z"
+        />
+      </svg>
+      {{ errorMessage() }}
+    }
+  </p>
+</div>

@@ -1,0 +1,143 @@
+<app-structure-modal
+  [isOpen]="isModalOpen()"
+  [config]="structureModalConfig()"
+  (closed)="onModalClosed()"
+/>
+
+<app-confirmation-modal />
+<app-structure-import-modal
+  [hasDraft]="hasDraft()"
+  (imported)="onImported()"
+  (createDraftRequested)="createDraft()"
+/>
+<section class="transition-height h-full duration-300">
+  @if (!hasDraft()) {
+    <div class="mb-6 flex flex-col gap-3 rounded-xl bg-warning-bg p-4 ring-1 ring-warning-border sm:flex-row sm:items-center">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        class="h-6 w-6 shrink-0 text-warning"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"
+          clip-rule="evenodd"
+        />
+      </svg>
+      <div class="flex-1">
+        <p class="font-poppins text-sm font-semibold text-warning-text">La edición está bloqueada</p>
+        <p class="text-sm text-warning-text">
+          Para modificar la estructura debe existir un borrador de versión. Los cambios se aplican
+          sobre el borrador y quedan vigentes al publicarlo.
+        </p>
+      </div>
+      <button type="button" class="btn-primary shrink-0" (click)="createDraft()">
+        Crear borrador
+      </button>
+    </div>
+  }
+
+  <div class="mb-8 flex flex-wrap justify-end gap-3">
+    <button
+      type="button"
+      class="btn-secondary inline-flex items-center gap-2"
+      (click)="onOpenImport()"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="size-4 shrink-0"
+        aria-hidden="true"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 7.5 12 3m0 0L7.5 7.5M12 3v13.5"
+        />
+      </svg>
+      Importar JSON
+    </button>
+    <button
+      type="button"
+      class="btn-secondary inline-flex items-center gap-2"
+      [disabled]="structuresData().length === 0"
+      (click)="onExport()"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="size-4 shrink-0"
+        aria-hidden="true"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
+        />
+      </svg>
+      Exportar JSON
+    </button>
+    @if (structuresData().length > 0) {
+      <button type="button" class="btn-primary" (click)="onShowCreateModal({})">
+        Crear Primer Nivel
+      </button>
+    }
+  </div>
+  <div class="card p-4">
+    @if (!isLoading()) {
+      @if (structuresData().length > 0) {
+        @for (structure of structuresData(); track structure.id) {
+          <app-structure-panel
+            [id]="structure.id"
+            [name]="structure.name"
+            [code]="structure.code"
+            [parentId]="structure.parentId"
+            [areaTypeId]="structure.areaTypeId"
+            [areaName]="structure.areaType.name"
+            [divisionLevel]="0"
+            [dependencies]="structure.dependencies"
+            [showDependencies]="structure.showDependencies"
+            [onShowDependencies]="onShowDependencies"
+            [onShowCreateModal]="onShowCreateModal"
+            [onShowEditModal]="onShowEditModal"
+            [onShowDeleteConfirmationModal]="onShowDeleteConfirmationModal"
+          />
+        }
+      } @else {
+        <div class="m-auto grid h-full max-w-[31.25rem] overflow-hidden rounded-xl bg-surface-raised ring-1 ring-border">
+          <div class="border-b border-border p-4">
+            <h4 class="font-poppins text-[1.3rem] font-semibold text-ink-heading">
+              Crear estructura organizacional
+            </h4>
+          </div>
+          <div class="px-4 pb-4 pt-2">
+            <p class="mb-6 text-[1rem] text-ink-muted">
+              Aún no se ha establecido una estructura organizacional. Empiece creando un organismo
+              del primer nivel en la jerarquía de su institución.
+              <strong>Ejemplo: </strong> “Dirección de Recursos Humanos” o “Viceministerio de
+              Comercio Interno”.
+            </p>
+            <button type="button" class="btn-primary w-full" (click)="onShowCreateModal({})">
+              Crear
+            </button>
+          </div>
+        </div>
+      }
+    } @else {
+      <div class="skeleton mb-4 h-16"></div>
+      <div class="skeleton mb-4 h-16"></div>
+      <div class="skeleton mb-4 h-16"></div>
+      <div class="skeleton mb-4 h-16"></div>
+      <div class="skeleton mb-4 h-16"></div>
+      <div class="skeleton mb-4 h-16"></div>
+      <div class="skeleton mb-4 h-16"></div>
+    }
+  </div>
+</section>

@@ -1,0 +1,174 @@
+@let c = calendario();
+
+<div class="flex h-full flex-col gap-4 p-6">
+  @if (isLoading()) {
+    <div class="flex h-[40vh] flex-col items-center justify-center gap-4 text-ink-subtle">
+      <span class="loader"></span>
+      <p class="text-sm">Cargando...</p>
+    </div>
+  } @else if (hasError() || !c) {
+    <div class="card flex flex-col items-center justify-center gap-3 p-10 text-center">
+      <p class="text-sm text-ink-muted">No se pudo cargar el calendario de feriados. Intente de nuevo.</p>
+      <div class="flex gap-2">
+        <button type="button" class="btn-secondary" (click)="goBack()">Volver al listado</button>
+        <button type="button" class="btn-primary" (click)="load()">Reintentar</button>
+      </div>
+    </div>
+  } @else {
+    <!-- Encabezado -->
+    <div class="card flex flex-wrap items-start justify-between gap-3 p-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="font-poppins text-xl font-semibold text-ink-heading">
+            <span class="tabular-nums">{{ c.codigo }}</span> · {{ c.nombre }}
+          </h1>
+          <span [class]="c.activo ? 'badge-success' : 'badge-neutral'">{{ c.activo ? 'Activo' : 'Inactivo' }}</span>
+        </div>
+        <p class="mt-1 text-sm text-ink-muted">
+          {{ c.paisNombre || 'Sin país' }} · {{ ambitoLabels[c.ambito] || c.ambito }} · Localidad gestora:
+          {{ c.localidadGestoraNombre || '—' }}
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" class="btn-secondary" (click)="goBack()">Volver</button>
+        @if (isAdmin) {
+          <button type="button" class="btn-primary" (click)="isCalendarModalOpen.set(true)">Editar</button>
+        }
+      </div>
+    </div>
+
+    <!-- Pestañas -->
+    <div class="segmented self-start" role="tablist" aria-label="Secciones">
+      <button type="button" role="tab" class="segmented-item" [class.segmented-item-active]="tab() === 'feriados'" [attr.aria-selected]="tab() === 'feriados'" (click)="tab.set('feriados')">
+        Feriados
+      </button>
+      <button type="button" role="tab" class="segmented-item" [class.segmented-item-active]="tab() === 'suscriptores'" [attr.aria-selected]="tab() === 'suscriptores'" (click)="tab.set('suscriptores')">
+        Localidades suscritas ({{ suscriptores().length }})
+      </button>
+    </div>
+
+    @if (tab() === 'feriados') {
+      <section class="card p-4">
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-1">
+            <button type="button" class="btn-icon" aria-label="Año anterior" (click)="setYear(year() - 1)">‹</button>
+            <span class="w-14 text-center text-sm font-semibold tabular-nums text-ink">{{ year() }}</span>
+            <button type="button" class="btn-icon" aria-label="Año siguiente" (click)="setYear(year() + 1)">›</button>
+            @if (year() !== currentYear + 1) {
+              <button type="button" class="btn-ghost btn-sm" (click)="setYear(currentYear + 1)">Ir a {{ currentYear + 1 }}</button>
+            }
+          </div>
+          @if (canEdit()) {
+            <div class="flex gap-2">
+              <button type="button" class="btn-secondary btn-sm" (click)="isImportModalOpen.set(true)">Importar</button>
+              <button type="button" class="btn-primary btn-sm" (click)="openCreate()">Agregar feriado</button>
+            </div>
+          }
+        </div>
+
+        @if (isLoadingFeriados()) {
+          <div class="flex justify-center p-8"><span class="loader"></span></div>
+        } @else if (feriadosError()) {
+          <div class="flex flex-col items-center gap-3 p-8 text-center">
+            <p class="text-sm text-ink-muted">No se pudieron cargar los feriados. Intente de nuevo.</p>
+            <button type="button" class="btn-secondary btn-sm" (click)="loadFeriados()">Reintentar</button>
+          </div>
+        } @else if (!feriados().length) {
+          <p class="rounded-lg border border-dashed border-border-strong bg-surface-sunken/60 px-4 py-6 text-center text-sm text-ink-subtle">
+            No hay feriados cargados para {{ year() }}. Agréguelos o impórtelos desde la publicación oficial.
+          </p>
+        } @else {
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="text-xs tracking-wide text-ink-subtle uppercase">
+                <tr>
+                  <th class="px-3 py-2">Fecha</th>
+                  <th class="px-3 py-2">Nombre</th>
+                  <th class="px-3 py-2">Alcance</th>
+                  <th class="px-3 py-2">Referencia normativa</th>
+                  @if (canEdit()) { <th class="px-3 py-2 text-right">Acciones</th> }
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-border">
+                @for (f of feriados(); track f.id) {
+                  <tr>
+                    <td class="px-3 py-2 whitespace-nowrap tabular-nums text-ink">{{ fecha(f) }}</td>
+                    <td class="px-3 py-2 text-ink">{{ f.nombre }}</td>
+                    <td class="px-3 py-2 text-ink-muted">{{ alcance(f) }}</td>
+                    <td class="px-3 py-2 text-ink-muted">{{ f.referenciaNormativa || '—' }}</td>
+                    @if (canEdit()) {
+                      <td class="px-3 py-2 text-right whitespace-nowrap">
+                        @if (isLocked(f)) {
+                          <span class="text-xs text-ink-subtle" [title]="'Fuera del plazo para cambios retroactivos (' + retroWindowDays() + ' días).'">Bloqueado</span>
+                        } @else {
+                          <button type="button" class="btn-ghost btn-sm" (click)="openEdit(f)">Editar</button>
+                          <button type="button" class="btn-ghost btn-sm text-error!" (click)="confirmDelete(f)">Eliminar</button>
+                        }
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+    } @else {
+      <section class="card p-4">
+        @if (!suscriptores().length) {
+          <p class="rounded-lg border border-dashed border-border-strong bg-surface-sunken/60 px-4 py-6 text-center text-sm text-ink-subtle">
+            Ninguna localidad está suscrita a este calendario.
+          </p>
+        } @else {
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="text-xs tracking-wide text-ink-subtle uppercase">
+                <tr>
+                  <th class="px-3 py-2">Código</th>
+                  <th class="px-3 py-2">Localidad</th>
+                  <th class="px-3 py-2">País</th>
+                  <th class="px-3 py-2">Vigencia</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-border">
+                @for (s of suscriptores(); track s.localidadId) {
+                  <tr>
+                    <td class="px-3 py-2 tabular-nums text-ink">{{ s.codigo }}</td>
+                    <td class="px-3 py-2">
+                      <a [routerLink]="['/localidades', s.localidadId]" class="text-brand underline">{{ s.nombreOficial }}</a>
+                    </td>
+                    <td class="px-3 py-2 text-ink-muted">{{ s.paisNombre || '—' }}</td>
+                    <td class="px-3 py-2 text-ink-muted tabular-nums">{{ vigencia(s.vigenteDesde, s.vigenteHasta) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+    }
+  }
+</div>
+
+@if (c) {
+  <app-holiday-calendar-modal [isOpen]="isCalendarModalOpen()" [calendario]="c" (closed)="onCalendarModalClosed()" />
+  <app-holiday-entry-modal
+    [isOpen]="isEntryModalOpen()"
+    [calendarioId]="c.id"
+    [feriado]="editingFeriado()"
+    [defaultDate]="defaultEntryDate()"
+    [today]="today"
+    [isAdmin]="isAdmin"
+    [retroWindowDays]="retroWindowDays()"
+    (closed)="isEntryModalOpen.set(false)"
+    (saved)="onEntrySaved()"
+  />
+  <app-holiday-import-modal
+    [isOpen]="isImportModalOpen()"
+    [calendarioId]="c.id"
+    [year]="year()"
+    (closed)="isImportModalOpen.set(false)"
+    (imported)="onImported()"
+  />
+}
+<app-confirmation-modal />

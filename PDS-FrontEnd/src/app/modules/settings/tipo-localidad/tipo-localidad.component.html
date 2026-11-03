@@ -1,0 +1,28 @@
+<app-crud-page>
+  <button slot="actions" type="button" (click)="openCreate()" class="btn-primary">
+    <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m-7-7h14" />
+    </svg>
+    Nuevo tipo
+  </button>
+  <app-table-filter slot="filter" searchPlaceholder="Buscar..." (searchChange)="onSearch($event)" />
+  <app-table
+    slot="table"
+    [headers]="headers"
+    [columnData]="allData()"
+    [isLoading]="isLoading()"
+    noDataDescription="No hay tipos de localidad registrados"
+  />
+  <app-paginator
+    slot="pagination"
+    [pageNumber]="pageNumber()"
+    [totalCount]="totalCount()"
+    [totalPages]="totalPages()"
+    [pageSizeInput]="pageSize()"
+    (pageToEmit)="onPageChange($event)"
+    (pageSize)="onPageSizeChange($event)"
+  />
+</app-crud-page>
+
+<app-tipo-localidad-modal [isOpen]="isModalOpen()" [tipo]="selected()" (closed)="onModalClosed()" />
+<app-confirmation-modal />

@@ -1,0 +1,140 @@
+<app-custom-modal
+  [isOpen]="isOpen()"
+  [title]="isEditMode ? 'Editar cargo' : 'Nuevo cargo'"
+  size="lg"
+  (closed)="onClose()"
+  [closeOnBackdrop]="false"
+>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-6">
+    <!-- Información general -->
+    <section class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <h3 class="text-sm font-semibold text-ink sm:col-span-2">Información general</h3>
+
+      <app-custom-select-search
+        class="sm:col-span-2"
+        formControlName="organizationalStructureId"
+        label="Estructura organizativa"
+        placeholder="Selecciona una estructura organizativa"
+        [options]="organizationalStructures()"
+        [required]="true"
+        [errorMessage]="organizationalStructureError"
+        [maxResults]="5"
+      />
+      <app-custom-select
+        class="sm:col-span-2"
+        formControlName="occupationalGroupId"
+        label="Grupo ocupacional"
+        placeholder="Selecciona un grupo ocupacional"
+        [options]="occupationalGroups()"
+        [required]="true"
+        [errorMessage]="occupationalGroupError"
+      />
+
+      <app-custom-input
+        formControlName="name"
+        label="Titulo"
+        placeholder="Ej: Analista de sistemas"
+        [required]="true"
+        [errorMessage]="nameError"
+      />
+      <app-custom-input formControlName="code" label="Codigo" placeholder="Ej: 10" />
+      <app-custom-input formControlName="grade" label="Grado" placeholder="Ej: 10" />
+      <app-custom-input formControlName="punctuation" label="Puntaje" placeholder="Ej: 10" />
+    </section>
+
+    <!-- Descripción del cargo -->
+    <section class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <h3 class="text-sm font-semibold text-ink sm:col-span-2">Descripción del cargo</h3>
+
+      <app-custom-textarea
+        formControlName="natureOfWork"
+        label="Naturaleza del trabajo"
+        placeholder="Describe la naturaleza del trabajo..."
+        [rows]="3"
+      />
+      <app-custom-textarea
+        formControlName="typicalTasks"
+        label="Tareas típicas"
+        placeholder="Describe las tareas típicas..."
+        [rows]="3"
+      />
+      <app-custom-textarea
+        formControlName="requiredEducation"
+        label="Educación requerida"
+        placeholder="Describe la educación requerida..."
+        [rows]="3"
+      />
+      <app-custom-textarea
+        formControlName="characteristics"
+        label="Características"
+        placeholder="Describe las características..."
+        [rows]="3"
+      />
+      <app-custom-textarea
+        class="sm:col-span-2"
+        formControlName="competencies"
+        label="Competencias"
+        placeholder="Describe las competencias requeridas..."
+        [rows]="5"
+      />
+      <app-custom-textarea
+        class="sm:col-span-2"
+        formControlName="otherDesirableRequirements"
+        label="Otros requisitos deseables"
+        placeholder="Describe otros requisitos deseables..."
+        [rows]="3"
+      />
+    </section>
+
+    <!-- Condiciones -->
+    <section class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <h3 class="text-sm font-semibold text-ink sm:col-span-2">Condiciones</h3>
+
+      <app-custom-input
+        formControlName="minSalary"
+        label="Salario mínimo"
+        [required]="true"
+        placeholder="Ej: 1000000"
+        [errorMessage]="minSalaryError"
+      />
+      <app-custom-input
+        formControlName="maxSalary"
+        label="Salario máximo"
+        [required]="true"
+        placeholder="Ej: 3000000"
+        [errorMessage]="maxSalaryError"
+      />
+      <app-custom-input
+        formControlName="yearsOfExperienceRequired"
+        label="Años de experiencia requeridos"
+        type="text"
+        [required]="true"
+        placeholder="Ej: 5"
+        [errorMessage]="yearsOfExperienceRequiredError"
+      />
+      <app-custom-input
+        formControlName="probatoryPeriod"
+        label="Periodo probatorio"
+        placeholder="Ej: 3 meses"
+      />
+
+      <label
+        class="flex cursor-pointer items-center gap-2 text-sm text-ink-muted sm:col-span-2"
+      >
+        <input
+          type="checkbox"
+          formControlName="isManager"
+          class="h-4 w-4 rounded border-border-strong text-brand focus:ring-brand-200"
+        />
+        Es Supervisor?
+      </label>
+    </section>
+
+    <div modal-actions class="flex justify-end gap-3 border-t border-border px-6 py-4">
+      <button type="button" class="btn-ghost" (click)="onClose()">Cancelar</button>
+      <button type="submit" class="btn-primary" [disabled]="isSaving()">
+        {{ isEditMode ? 'Guardar cambios' : 'Crear' }}
+      </button>
+    </div>
+  </form>
+</app-custom-modal>

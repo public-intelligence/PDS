@@ -1,0 +1,204 @@
+@if (!isLoading) {
+  @if (data().length > 0) {
+    <div class="relative h-full overflow-x-auto rounded-xl bg-surface-raised ring-1 ring-border">
+      <table class="w-full text-left text-sm text-ink-muted rtl:text-right">
+        <thead
+          class="sticky top-0 z-20 bg-surface-sunken/90 text-xs text-ink-subtle uppercase backdrop-blur"
+        >
+          <tr class="border-b border-border">
+            @for (header of headers; track header.value) {
+              <th
+                scope="col"
+                [ngClass]="{
+                  'text-left': header.justify === 'left',
+                  'text-center': header.justify === 'center',
+                  'text-right': header.justify === 'right',
+                }"
+                class="truncate px-6 py-3.5 font-semibold tracking-wide"
+              >
+                {{ header.value }}
+              </th>
+            }
+            @if (actions) {
+              <th class="truncate px-6 py-3.5 text-center font-semibold tracking-wide">Acciones</th>
+            }
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border">
+          @for (data of data(); track `${data.id}-${$index}`) {
+            <tr class="transition-colors duration-150 hover:bg-surface-sunken/60">
+              @for (cell of data.columns; track $index) {
+                @switch (cell.dataType) {
+                  @case ('link') {
+                    <td title="{{ cell.value }}" class="px-6 py-3.5 text-ellipsis">
+                      <div class="flex items-center gap-1">
+                        <a
+                          class="text-brand no-underline duration-200 hover:text-brand-700 hover:underline"
+                          [routerLink]="cell.href"
+                          target="{{ cell.target }}"
+                          >{{ cell.value }}</a
+                        >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke-width="1.5"
+                          stroke="currentColor"
+                          class="size-4 shrink-0 text-brand-400"
+                          aria-hidden="true"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="m8.25 4.5 7.5 7.5-7.5 7.5"
+                          />
+                        </svg>
+                      </div>
+                    </td>
+                  }
+                  @default {
+                    <td
+                      title="{{ cell.value }}"
+                      class="px-6 py-3.5 text-ellipsis"
+                      [ngClass]="{
+                        'text-left': cell.justify === 'left',
+                        'text-center': cell.justify === 'center',
+                        'text-right': cell.justify === 'right',
+                        'tabular-nums':
+                          cell.dataType === 'number' ||
+                          cell.dataType === 'date' ||
+                          cell.dataType === 'grade',
+                      }"
+                    >
+                      @if (pillColor(cell); as pc) {
+                        <span [class]="badgeClasses(pc)">{{ cell.value }}</span>
+                      } @else {
+                        {{ cell.value }}
+                      }
+                    </td>
+                  }
+                  <!-- / -->
+                }
+              }
+              @if (actions) {
+                <td class="px-6 py-3.5 text-center">
+                  @if (!showIcons) {
+                    <div
+                      class="relative flex h-full cursor-pointer justify-center"
+                      (click)="
+                        toggleActions({
+                          id: `${data.id}-${$index}`,
+                          bool: !data.showActions,
+                          event: $event,
+                        })
+                      "
+                      (keydown.enter)="
+                        toggleActions({ id: `${data.id}-${$index}`, bool: !data.showActions })
+                      "
+                      tabindex="0"
+                      aria-label="Acciones"
+                    >
+                      <span
+                        class="grid size-8 place-items-center rounded-lg text-ink-subtle transition-colors hover:bg-surface-sunken hover:text-ink-muted"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 128 512"
+                          fill="currentColor"
+                          class="h-[1.1rem] w-[1.1rem]"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M64 360a56 56 0 1 0 0 112A56 56 0 1 0 64 360zm0-160a56 56 0 1 0 0 112A56 56 0 1 0 64 200zM120 96A56 56 0 1 0 8 96a56 56 0 1 0 112 0z"
+                          />
+                        </svg>
+                      </span>
+                      @if (data.showActions) {
+                        <div
+                          (appClickOutside)="toggleActions({ id: data.id, bool: false })"
+                          class="fixed z-[9999] min-w-[10rem] -translate-x-1/2 overflow-hidden rounded-xl border border-border bg-surface-raised py-1 shadow-lg ring-1 ring-slate-900/5"
+                          [style.top.px]="dropdownPosition().top"
+                          [style.left.px]="dropdownPosition().left"
+                          role="menu"
+                        >
+                          <ul class="text-sm">
+                            @if (data.displayData) {
+                              <li
+                                tabindex="0"
+                                class="cursor-pointer truncate px-4 py-2 text-ink-muted transition-colors hover:bg-surface-sunken"
+                              >
+                                Ver detalles
+                              </li>
+                            }
+                            @for (action of data.actionsOptions; track action.name) {
+                              <li
+                                (click)="runAction(action, data.id)"
+                                (keydown.enter)="runAction(action, data.id)"
+                                tabindex="0"
+                                class="cursor-pointer truncate px-4 py-2 text-ink-muted transition-colors hover:bg-surface-sunken"
+                                [ngClass]="{
+                                  'text-success-text hover:bg-success-bg': action.color === 'green',
+                                  'text-warning-text hover:bg-warning-bg':
+                                    action.color === 'orange',
+                                  'text-error-text hover:bg-error-bg': action.color === 'red',
+                                }"
+                              >
+                                {{ action.name }}
+                              </li>
+                            }
+                          </ul>
+                        </div>
+                      }
+                    </div>
+                  } @else {
+                    <div class="flex justify-center gap-4">
+                      @for (action of data.actionsOptions; track action.name) {
+                        <div
+                          title="{{ action.name }}"
+                          (click)="action.function(data.id)"
+                          (keydown.enter)="action.function(data.id)"
+                          tabindex="0"
+                          class="icons inline-flex cursor-pointer items-center justify-center text-[1.1rem]"
+                          [ngClass]="{
+                            'text-error hover:text-error-text duration-200': action.color === 'red',
+                          }"
+                          [innerHTML]="safeHtml(action.icon)"
+                        ></div>
+                      }
+                    </div>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <div class="flex h-full items-center justify-center">
+      <div class="grid place-items-center px-6 py-12 text-center">
+        <svg
+          id="Icons"
+          xmlns="http://www.w3.org/2000/svg"
+          version="1.1"
+          viewBox="0 0 24 24"
+          class="mb-3 h-[2.75rem] w-[2.75rem] rotate-45 text-ink-subtle"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            d="M20,3H4c-.552,0-1,.448-1,1v16c0,.552.448,1,1,1h16c.552,0,1-.448,1-1V4c0-.552-.448-1-1-1ZM17.354,8.061l-9.293,9.293c-.195.195-.512.195-.707,0l-.707-.707c-.195-.195-.195-.512,0-.707L15.939,6.647c.195-.195.512-.195.707,0l.707.707c.195.195.195.512,0,.707Z"
+          />
+        </svg>
+        <p class="text-ink-muted">{{ noDataDescription }}</p>
+      </div>
+    </div>
+  }
+} @else {
+  <div class="h-full overflow-hidden rounded-xl bg-surface-raised p-4 ring-1 ring-border">
+    <div class="skeleton mb-3 h-9 w-full"></div>
+    @for (row of [1, 2, 3, 4, 5, 6]; track row) {
+      <div class="skeleton mb-2 h-11 w-full"></div>
+    }
+  </div>
+}

@@ -1,0 +1,167 @@
+<div class="flex flex-col gap-4 p-4">
+  <a routerLink="/structure-versions" class="btn-ghost btn-sm w-fit">
+    <svg class="size-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+      <path d="M12.5 5 7.5 10l5 5" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+    Volver a versiones
+  </a>
+
+  <!-- Selectores -->
+  <div class="card p-4">
+    <h2 class="text-sm font-semibold uppercase tracking-wide text-ink-subtle">Comparar versiones</h2>
+    <div class="mt-4 grid grid-cols-1 items-end gap-4 sm:grid-cols-[1fr_auto_1fr_auto]">
+      <label class="flex flex-col gap-1.5">
+        <span class="text-xs font-medium uppercase tracking-wide text-ink-subtle">Versión origen</span>
+        <select [value]="fromId()" (change)="onFromChange($any($event.target).value)">
+          <option value="">Seleccione…</option>
+          @for (v of versions(); track v.id) {
+            <option [value]="v.id">{{ versionLabel(v) }} ({{ v.effectiveFrom }})</option>
+          }
+        </select>
+        @if (fromVersion(); as fv) {
+          <span [class]="badge(fv.status)" class="w-fit">{{ statusLabels[fv.status] }}</span>
+        }
+      </label>
+
+      <div class="flex h-10 items-center justify-center text-ink-subtle sm:pb-px">
+        <svg class="size-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M4 10h12M11.5 5.5 16 10l-4.5 4.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </div>
+
+      <label class="flex flex-col gap-1.5">
+        <span class="text-xs font-medium uppercase tracking-wide text-ink-subtle">Versión destino</span>
+        <select [value]="toId()" (change)="onToChange($any($event.target).value)">
+          <option value="">Seleccione…</option>
+          @for (v of versions(); track v.id) {
+            <option [value]="v.id">{{ versionLabel(v) }} ({{ v.effectiveFrom }})</option>
+          }
+        </select>
+        @if (toVersion(); as tv) {
+          <span [class]="badge(tv.status)" class="w-fit">{{ statusLabels[tv.status] }}</span>
+        }
+      </label>
+
+      <button type="button" class="btn-primary" [disabled]="!canCompare() || isLoading()" (click)="compare()">
+        {{ isLoading() ? 'Comparando…' : 'Comparar' }}
+      </button>
+    </div>
+  </div>
+
+  @if (comparison(); as cmp) {
+    <!-- Resumen -->
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div class="stat-card">
+        <span class="stat-value text-success-text">{{ cmp.summary.createdCount }}</span>
+        <span class="stat-label">Creadas</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value text-error-text">{{ cmp.summary.deletedCount }}</span>
+        <span class="stat-label">Eliminadas</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value text-warning-text">{{ cmp.summary.modifiedCount }}</span>
+        <span class="stat-label">Modificadas</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value text-info-text">{{ cmp.summary.relocatedCount }}</span>
+        <span class="stat-label">Reubicadas</span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
+      <app-org-chart-viewer
+        [nodes]="nodes()"
+        [diffMap]="diffMap()"
+        [showHistoryControls]="false"
+        title="Comparación v{{ cmp.fromVersion.number }} → v{{ cmp.toVersion.number }}"
+      />
+
+      <div class="flex flex-col gap-3">
+        <div class="card p-4">
+          <h3 class="text-sm font-semibold uppercase tracking-wide text-ink-subtle">Cambios</h3>
+
+          @if (created().length) {
+            <div class="mt-4">
+              <p class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-success-text">
+                Creadas <span class="badge-success tabular-nums">{{ created().length }}</span>
+              </p>
+              <ul class="mt-2 flex flex-col gap-1 text-sm text-ink">
+                @for (c of created(); track c.sourceUnitId) {
+                  <li class="flex items-center gap-2">
+                    <span class="size-1.5 shrink-0 rounded-full bg-success"></span>{{ label(c) }}
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+
+          @if (deleted().length) {
+            <div class="mt-4">
+              <p class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-error-text">
+                Eliminadas <span class="badge-error tabular-nums">{{ deleted().length }}</span>
+              </p>
+              <ul class="mt-2 flex flex-col gap-1 text-sm text-ink">
+                @for (c of deleted(); track c.sourceUnitId) {
+                  <li class="flex items-center gap-2">
+                    <span class="size-1.5 shrink-0 rounded-full bg-error"></span>{{ label(c) }}
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+
+          @if (modified().length) {
+            <div class="mt-4">
+              <p class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-warning-text">
+                Modificadas <span class="badge-warning tabular-nums">{{ modified().length }}</span>
+              </p>
+              <ul class="mt-2 flex flex-col gap-2 text-sm text-ink">
+                @for (c of modified(); track c.sourceUnitId) {
+                  <li class="flex flex-col gap-1">
+                    <span class="flex items-center gap-2">
+                      <span class="size-1.5 shrink-0 rounded-full bg-warning"></span>{{ label(c) }}
+                    </span>
+                    @if (c.fieldChanges.length) {
+                      <span class="ml-3.5 flex flex-col gap-1">
+                        @for (f of c.fieldChanges; track f.field) {
+                          <span class="flex flex-wrap items-center gap-1.5 text-xs">
+                            <span class="text-ink-subtle">{{ f.field }}:</span>
+                            <span class="rounded bg-error-bg px-1.5 py-0.5 text-error-text line-through ring-1 ring-inset ring-error-border">{{ f.from ?? '—' }}</span>
+                            <svg class="size-3 text-ink-subtle" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                              <path d="M4 10h12M11.5 5.5 16 10l-4.5 4.5" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <span class="rounded bg-success-bg px-1.5 py-0.5 text-success-text ring-1 ring-inset ring-success-border">{{ f.to ?? '—' }}</span>
+                          </span>
+                        }
+                      </span>
+                    }
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+
+          @if (relocated().length) {
+            <div class="mt-4">
+              <p class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-info-text">
+                Reubicadas <span class="badge-info tabular-nums">{{ relocated().length }}</span>
+              </p>
+              <ul class="mt-2 flex flex-col gap-1 text-sm text-ink">
+                @for (c of relocated(); track c.sourceUnitId) {
+                  <li class="flex items-center gap-2">
+                    <span class="size-1.5 shrink-0 rounded-full bg-info"></span>{{ label(c) }}
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+
+          @if (!cmp.unitChanges.length) {
+            <p class="mt-4 text-sm text-ink-subtle">Sin diferencias entre las versiones.</p>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

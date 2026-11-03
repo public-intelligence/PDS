@@ -1,0 +1,601 @@
+/* You can add global styles to this file, and also import other style files */
+
+@import 'tailwindcss';
+@import 'toastify-js/src/toastify.css';
+@source '../node_modules/@public-intelligence/ui-core';
+
+@theme {
+  --font-roboto: 'Roboto', sans-serif;
+  --font-poppins: 'Poppins', sans-serif;
+
+  --color-primary-blue: #003876;
+  --color-primary-blue-dark: #1a579a;
+  --color-primary-blue-disabled: #102742;
+  --color-primary-blue-lighter: #7e9ef857;
+  --color-primary-red: #ee2a24;
+  --color-primary-red-dark: #c0392b;
+
+  --color-text-darkgray: #707070;
+  --color-text-black: #000000;
+  --color-text-light-gray: #e6e7e8;
+  --color-text-light-blue: #0087ff;
+
+  --color-alert-important: #0087ff;
+  --color-alert-warning: #ebc342;
+  --color-alert-error: #ff6568;
+  --color-alert-success: #2ecc71;
+  --color-alert-additional-info: #0087ff;
+
+  --color-bg-principal: #ffffff;
+  --color-bg-secondary: #f8f8f8;
+  --color-bg-light-blue: #eff7ff;
+  --color-bg-dividers: #d3d3d3;
+  --color-input-hover-border: #b9ddfd;
+  --color-secondary-hover: #6da2db;
+
+  /* ===== "Brighter refresh" semantic palette — app-owned UI only =====
+     Added alongside the legacy tokens above (which the @public-intelligence shell, the
+     @layer base native element rules, and a few legacy screens still use).
+     Tailwind v4 auto-generates utilities: bg-brand, text-accent,
+     ring-brand-200, bg-success-bg, text-success-text, etc. */
+
+  /* Brand — primary actions / active states (institutional blue #003876).
+     Note: the ramp is intentionally non-monotonic so the original behaviour
+     is preserved — e.g. primary hover (brand-700) is *lighter* than the base,
+     matching the legacy --color-primary-blue-dark. */
+  --color-brand-50: #e6eef6;
+  --color-brand-100: #c6d8ea;
+  --color-brand-200: #9dbbdb;
+  --color-brand-300: #7ea7d3; /* field hover border */
+  --color-brand-400: #4e84c0;
+  --color-brand-500: #2e8bc0; /* secondary / data blue */
+  --color-brand-600: #134a86;
+  --color-brand-700: #1a579a; /* primary hover (legacy primary-blue-dark) */
+  --color-brand: #003876; /* primary */
+  --color-brand-900: #002a5c;
+
+  /* Accent / CTA — institutional gold (legacy --color-alert-warning) */
+  --color-accent-50: #fdf8e7;
+  --color-accent-100: #faeec0;
+  --color-accent-300: #f2d873;
+  --color-accent: #ebc342;
+  --color-accent-600: #c99a1f;
+  --color-accent-700: #8a6d12;
+
+  /* Neutral surfaces / ink / borders */
+  --color-surface: #f8fafc;
+  --color-surface-raised: #ffffff;
+  --color-surface-sunken: #f1f5f9;
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
+  --color-ink: #0f172a;
+  --color-ink-muted: #475569;
+  --color-ink-subtle: #94a3b8;
+  --color-ink-heading: #0f172a;
+
+  /* Semantic — bg / border / text + solid (based on legacy alert palette) */
+  --color-success: #2ecc71;
+  --color-success-bg: #e9f9f0;
+  --color-success-border: #a6e8c3;
+  --color-success-text: #1b8a4e;
+  --color-warning: #ebc342;
+  --color-warning-bg: #fdf8e7;
+  --color-warning-border: #f2d873;
+  --color-warning-text: #8a6d12;
+  --color-error: #ee2a24; /* legacy primary-red — strong enough for white text */
+  --color-error-bg: #fdecea;
+  --color-error-border: #f7b9b6;
+  --color-error-text: #c0392b; /* legacy primary-red-dark */
+  --color-info: #0087ff; /* legacy alert-important */
+  --color-info-bg: #e6f3ff;
+  --color-info-border: #b3dbff;
+  --color-info-text: #0067c4;
+}
+
+html,
+body {
+  font-family: 'Roboto';
+  @apply text-[14px] lg:text-[16px];
+}
+
+@layer base {
+  button {
+    @apply cursor-pointer inline-flex items-center justify-center gap-2 rounded-md font-semibold normal-case transition-colors duration-150 disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed;
+  }
+  button:not([class]) {
+    @apply bg-[#003876] px-4 py-2 text-sm text-white hover:bg-[#1a579a] shadow-xs;
+  }
+  app-header button,
+  app-sidebar button {
+    background-color: transparent;
+    color: inherit;
+    text-transform: none;
+    padding: 0.375rem;
+    border-radius: 0.5rem;
+    font-weight: inherit;
+    font-size: inherit;
+    box-shadow: none;
+    transition: background-color 150ms;
+  }
+
+  app-header button:hover,
+  app-sidebar button:hover {
+    background-color: #f9fafb;
+  }
+
+  input,
+  textarea {
+    @apply border-bg-dividers font-roboto text-text-darkgray disabled:bg-text-light-gray hover:border-input-hover-border hover:bg-bg-light-blue focus:border-input-hover-border h-[2.6875rem] rounded-[0.3125rem] border bg-white px-3 outline-none disabled:cursor-not-allowed;
+  }
+
+  select {
+    @apply border-bg-dividers font-roboto text-text-darkgray disabled:bg-text-light-gray hover:border-input-hover-border hover:bg-bg-light-blue focus:border-input-hover-border h-[2.6875rem] rounded-[0.3125rem] border px-3 outline-none disabled:cursor-not-allowed;
+  }
+  option {
+    @apply rounded-lg bg-white;
+  }
+  a:not(app-header a) {
+    @apply font-roboto text-[1rem] text-blue-600 underline duration-200 hover:text-blue-400;
+  }
+  p {
+    @apply text-[1.1669rem];
+  }
+
+  h1 {
+    @apply font-poppins text-[5.3331rem];
+  }
+
+  h2 {
+    @apply font-poppins text-[4.6662rem];
+  }
+
+  h3 {
+    @apply font-poppins text-[4rem];
+  }
+
+  h4 {
+    @apply font-poppins text-[3.3331rem];
+  }
+
+  h5 {
+    @apply font-poppins text-[2.6669rem];
+  }
+
+  h6 {
+    @apply font-poppins text-[2rem];
+  }
+}
+
+@layer components {
+  .base-button {
+    @apply hover:bg-primary-blue-lighter relative flex w-full cursor-pointer place-items-center gap-4 rounded-none bg-transparent px-[2rem] py-3 text-[1rem] text-gray-600 normal-case no-underline duration-200;
+  }
+
+  .sidebar-button {
+    @apply font-roboto flex w-full cursor-pointer items-center rounded-lg bg-transparent px-3 py-[0.6rem] text-left text-[0.88rem] font-medium text-gray-600 normal-case transition-colors duration-200 hover:bg-gray-100;
+  }
+  .secondary-button {
+    @apply border-primary-blue text-primary-blue disabled:hover:border-primary-blue disabled:hover:text-primary-blue hover:border-secondary-hover hover:text-secondary-hover border bg-white hover:bg-transparent disabled:bg-slate-400;
+  }
+
+  .secondary-full-button {
+    @apply bg-primary-red hover:bg-primary-red-dark;
+  }
+
+  .error-input {
+    @apply border-alert-error bg-[#ffeeed];
+  }
+
+  .subtitle1 {
+    @apply font-poppins text-[1.6669rem];
+  }
+
+  .subtitle2 {
+    @apply font-poppins text-[1.3331rem];
+  }
+
+  .widget-heading {
+    @apply text-[1.2rem] font-normal;
+  }
+
+  .panel-container {
+    @apply h-full overflow-auto bg-white !max-w-none;
+  }
+
+  .label {
+    @apply mb-1 ml-[3px] block truncate overflow-hidden text-left text-[1rem] font-normal text-gray-700;
+  }
+
+  .icons {
+    @apply text-primary-blue duration-200 hover:text-[#3267a5];
+  }
+
+  .container {
+    @apply px-8 !max-w-none;
+  }
+}
+
+/* ===== "Brighter refresh" component recipes =====
+   These live in the components layer, which beats the @layer base `button`/
+   `input`/`select` rules regardless of specificity — so an explicit .btn-* /
+   .field-* class fully owns appearance while the legacy shell stays untouched.
+   Grouped selectors share base props (no @apply of custom classes, which v4
+   does not support). */
+@layer components {
+  /* ---- Buttons (GOV.UK & PDS Design System Standards) ---- */
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost,
+  .btn-accent,
+  .btn-danger,
+  .btn-custom-primary,
+  .btn-custom-outline {
+    @apply inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-md px-3.5 text-xs font-semibold normal-case shadow-xs outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary,
+  .btn-custom-primary {
+    background-color: #003876 !important;
+    color: #ffffff !important;
+    border: 1px solid #002d18 !important;
+  }
+  .btn-primary:hover,
+  .btn-custom-primary:hover {
+    background-color: #1a579a !important;
+    color: #ffffff !important;
+  }
+  .btn-secondary,
+  .btn-custom-outline {
+    background-color: #f3f2f1 !important;
+    color: #0b0c0c !important;
+    border: 1px solid #b1b4b6 !important;
+  }
+  .btn-secondary:hover,
+  .btn-custom-outline:hover {
+    background-color: #e5e3e1 !important;
+    color: #0b0c0c !important;
+  }
+  .btn-ghost {
+    background-color: transparent !important;
+    color: #475569 !important;
+    border: 0 !important;
+  }
+  .btn-ghost:hover {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+  }
+  .btn-accent {
+    background-color: #ebc342 !important;
+    color: #0b0c0c !important;
+  }
+  .btn-danger {
+    background-color: #d4351c !important;
+    color: #ffffff !important;
+  }
+  .btn-danger:hover {
+    background-color: #aa2a16 !important;
+    color: #ffffff !important;
+  }
+  .btn-sm {
+    @apply h-7 px-2.5 text-xs;
+  }
+  .btn-icon {
+    @apply inline-grid size-7 cursor-pointer place-items-center rounded-md border-0 bg-transparent p-0 text-ink-subtle normal-case shadow-none outline-none transition-colors hover:bg-surface-sunken hover:text-ink-muted focus-visible:ring-2 focus-visible:ring-border-strong;
+  }
+
+  /* ---- Status badges / pills ---- */
+  .badge,
+  .badge-success,
+  .badge-warning,
+  .badge-error,
+  .badge-info,
+  .badge-neutral {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset;
+  }
+  .badge-success {
+    @apply bg-success-bg text-success-text ring-success-border;
+  }
+  .badge-warning {
+    @apply bg-warning-bg text-warning-text ring-warning-border;
+  }
+  .badge-error {
+    @apply bg-error-bg text-error-text ring-error-border;
+  }
+  .badge-info {
+    @apply bg-info-bg text-info-text ring-info-border;
+  }
+  .badge-neutral {
+    @apply bg-surface-sunken text-ink-muted ring-border;
+  }
+
+  /* ---- Cards & page chrome ---- */
+  .card {
+    @apply rounded-xl bg-surface-raised shadow-sm ring-1 ring-border;
+  }
+  .stat-card {
+    @apply flex flex-col gap-1 rounded-xl bg-surface-raised p-4 shadow-sm ring-1 ring-border;
+  }
+  .stat-value {
+    @apply font-poppins text-2xl font-semibold tabular-nums text-ink;
+  }
+  .stat-label {
+    @apply text-xs font-medium tracking-wide text-ink-subtle uppercase;
+  }
+  .page-header {
+    @apply mb-4 flex items-center justify-between gap-4;
+  }
+  .page-title {
+    @apply font-poppins text-2xl font-semibold text-ink-heading;
+  }
+  .page-subtitle {
+    @apply text-sm text-ink-muted;
+  }
+
+  /* ---- Segmented control (replaces the !important toggle overrides) ---- */
+  .segmented {
+    @apply inline-flex items-center gap-1 rounded-lg bg-surface-sunken p-1;
+  }
+  .segmented-item {
+    @apply inline-flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-transparent px-3 py-1.5 text-sm font-medium normal-case text-ink-muted shadow-none outline-none transition-colors hover:text-ink;
+  }
+  .segmented-item-active {
+    @apply bg-surface-raised text-brand shadow-sm;
+  }
+
+  /* ---- Form field recipes (consumed by the CVA controls) ---- */
+  .field-label {
+    @apply mb-1 block text-sm font-medium text-ink-muted;
+  }
+  .field-control {
+    @apply h-10 w-full rounded-lg border border-border-strong bg-surface-raised px-3 text-sm text-ink shadow-none outline-none transition-colors placeholder:text-ink-subtle hover:border-brand-300 hover:bg-surface-raised focus:border-brand focus-visible:ring-2 focus-visible:ring-brand-200;
+  }
+  .field-control-error {
+    @apply border-error focus:border-error focus-visible:ring-error/30;
+  }
+  .field-control-disabled {
+    @apply cursor-not-allowed border-border bg-surface-sunken text-ink-subtle hover:border-border hover:bg-surface-sunken;
+  }
+  .field-error {
+    @apply mt-1 flex items-center gap-1 text-xs text-error-text;
+  }
+}
+
+/* ===== <a> con apariencia de botón =====
+   El sistema de diseño (@public-intelligence/ui-core) se carga SIN capas y declara
+   `a { color: var(--sdd-color-primary-700) }` (#0F539C). Al no estar en una
+   capa, gana sobre los recipes .btn-* de @layer components: un
+   <a class="btn-primary"> quedaba azul sobre azul (#0F539C sobre #003876,
+   1.5:1 de contraste, ilegible). Estas reglas —también sin capa y más
+   específicas— devuelven el color que el recipe ya declaraba en los botones
+   de fondo oscuro. Los de fondo claro (secondary/ghost/accent) se dejan como
+   están para no alterar pantallas existentes. */
+a.btn-primary,
+a.btn-danger {
+  color: #fff;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.cdk-drag-preview {
+  background: white;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  opacity: 0.8;
+  overflow: hidden;
+}
+
+/* Animations */
+
+.fade-in {
+  -webkit-animation: fade-in 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  animation: fade-in 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@-webkit-keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.slide-in-bottom {
+  -webkit-animation: slide-in-bottom 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  animation: slide-in-bottom 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@-webkit-keyframes slide-in-bottom {
+  0% {
+    -webkit-transform: translateY(100px);
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  100% {
+    -webkit-transform: translateY(0);
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes slide-in-bottom {
+  0% {
+    -webkit-transform: translateY(100px);
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  100% {
+    -webkit-transform: translateY(0);
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.scale-in {
+  animation: scale-in 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.slide-in-top {
+  animation: slide-in-top 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes slide-in-top {
+  0% {
+    transform: translateY(-12px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  0% {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Leaflet vs Tailwind Preflight: el reset `img { max-width: 100% }` de Preflight deforma los
+   tiles del mapa. Esta regla sin capa (unlayered) gana sobre la capa `base` de Tailwind. */
+.leaflet-container img,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-image-layer,
+.leaflet-tile-pane img {
+  max-width: none;
+}
+
+/* Leaflet usa z-index internos altos (panes 400, controles 1000) que, sin un contexto de
+   apilamiento propio, se montan por encima de los modales (z-50). `isolation: isolate` confina
+   esos z-index dentro del mapa para que cualquier modal/overlay quede por encima. */
+.leaflet-container {
+  isolation: isolate;
+}
+
+/* Etiqueta permanente con el nombre de la localidad sobre cada marcador del mapa. Compacta para
+   no tapar los pines vecinos; el tooltip por defecto de Leaflet es una caja blanca grande. */
+.leaflet-tooltip.locality-label {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--color-primary-blue, #003876);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-primary-blue, #003876);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+}
+.leaflet-tooltip.locality-label::before {
+  display: none; /* oculta la flecha del tooltip */
+}
+
+/* Burbujas de agrupación de marcadores (markercluster) con el color institucional. */
+.locality-cluster {
+  background: transparent;
+}
+.locality-cluster span {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--color-brand);
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  border: 3px solid rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.skeleton {
+  background: #eee;
+  background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
+  border-radius: 5px;
+  background-size: 200% 100%;
+  animation: 1.5s shine linear infinite;
+}
+
+@keyframes shine {
+  to {
+    background-position-x: -200%;
+  }
+}
+
+.loader {
+  width: 48px;
+  height: 48px;
+  border: 5px solid var(--color-brand);
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Respect reduced-motion preferences (a11y). Unlayered so it wins the cascade. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .skeleton,
+  .loader {
+    animation: none !important;
+  }
+}
+
+/* Ocultar el botón de notificaciones (campana) y su divisor en el encabezado superior */
+app-header button:has(path[d*="M18.2656"]),
+app-header button:has(path[d*="M18.2656"]) + div {
+  display: none !important;
+}
+
+/* Permitir que menús desplegables del sidebar con muchos elementos (ej. Configuración)
+   muestren todas sus opciones sin ser recortados por la restricción max-h-96 (384px). */
+app-sidebar .max-h-96 {
+  max-height: 3000px !important;
+}
+

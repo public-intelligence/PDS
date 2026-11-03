@@ -1,0 +1,49 @@
+<app-crud-page>
+  @if (isAdmin) {
+    <button slot="actions" type="button" (click)="openCreate()" class="btn-primary">
+      <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m-7-7h14" />
+      </svg>
+      Nuevo calendario
+    </button>
+  }
+
+  <form slot="filter" [formGroup]="filterForm" class="grid grid-cols-1 items-end gap-3 md:grid-cols-3">
+    <app-custom-input formControlName="q" label="Buscar" placeholder="Código o nombre..." />
+    <app-custom-select formControlName="paisId" label="País" [options]="paisOptions()" placeholder="Todos" />
+    @if (canFilterManaged()) {
+      <label class="flex items-center gap-1.5 pb-4 text-sm text-ink-muted">
+        <input type="checkbox" formControlName="soloGestiono" /> Solo los que gestiono
+      </label>
+    }
+  </form>
+
+  <div slot="table" class="h-full">
+    @if (hasError()) {
+      <div class="flex flex-col items-center justify-center gap-3 p-10 text-center">
+        <p class="text-sm text-ink-muted">No se pudieron cargar los calendarios de feriados. Intente de nuevo.</p>
+        <button type="button" class="btn-secondary" (click)="load()">Reintentar</button>
+      </div>
+    } @else {
+      <app-table
+        [headers]="headers"
+        [columnData]="rows()"
+        [isLoading]="isLoading()"
+        noDataDescription="No hay calendarios de feriados. Cree uno por país o región, por ejemplo «DO-NAC · Feriados nacionales de República Dominicana»."
+      />
+    }
+  </div>
+
+  <app-paginator
+    slot="pagination"
+    [pageNumber]="pageNumber()"
+    [totalCount]="totalCount()"
+    [totalPages]="totalPages()"
+    [pageSizeInput]="pageSize()"
+    (pageToEmit)="onPageChange($event)"
+    (pageSize)="onPageSizeChange($event)"
+  />
+</app-crud-page>
+
+<app-holiday-calendar-modal [isOpen]="isModalOpen()" [calendario]="selected()" (closed)="onModalClosed()" />
+<app-confirmation-modal />

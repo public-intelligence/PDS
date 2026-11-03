@@ -1,0 +1,38 @@
+<app-custom-modal
+  [isOpen]="isOpen()"
+  title="Cerrar localidad"
+  size="md"
+  [closeOnBackdrop]="false"
+  (closed)="onClose()"
+>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+    <div class="rounded-lg border border-error-border bg-error-bg px-3 py-2 text-sm text-error-text">
+      El cierre cambia el estado de la localidad a «En cierre». No se elimina información histórica.
+    </div>
+    <p class="text-sm text-ink-muted">{{ localityName() }}</p>
+    <p class="rounded-lg border border-info-border bg-info-bg px-3 py-2 text-sm text-info-text">
+      Desde la fecha de cierre la localidad no tendrá días laborables.
+    </p>
+
+    <app-custom-textarea
+      formControlName="motivo"
+      label="Motivo del cierre"
+      [required]="true"
+      [rows]="3"
+      [errorMessage]="motivoError"
+    />
+    <app-custom-input type="date" formControlName="cierreFecha" label="Fecha de cierre (opcional)" />
+    <app-custom-textarea
+      formControlName="serviciosAfectados"
+      label="Servicios afectados (opcional)"
+      [rows]="2"
+    />
+
+    <div modal-actions class="flex justify-end gap-3 border-t border-border px-6 py-4">
+      <button type="button" class="btn-ghost" (click)="onClose()">
+        Cancelar
+      </button>
+      <button type="submit" class="btn-danger" [disabled]="isSaving()">Cerrar localidad</button>
+    </div>
+  </form>
+</app-custom-modal>

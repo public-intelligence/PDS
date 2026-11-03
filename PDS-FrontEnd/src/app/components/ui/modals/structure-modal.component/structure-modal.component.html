@@ -1,0 +1,41 @@
+<app-custom-modal
+  [isOpen]="isOpen()"
+  [title]="config().isEdit ? 'Editar dependencia' : 'Crear dependencia'"
+  [closeOnBackdrop]="false"
+  (closed)="closeModal()"
+>
+  @if (config().parentName) {
+    <p class="mb-4 rounded-lg bg-surface-sunken px-3 py-2 text-sm text-ink-muted">
+      <span class="font-medium text-ink">Dependencia padre:</span>
+      {{ config().parentName }}
+      @if (config().parentCode) {
+        <span class="ml-1 text-ink-subtle">({{ config().parentCode }})</span>
+      }
+    </p>
+  }
+
+  <app-custom-form [formGroup]="form" (formSubmit)="onSubmit()" (formInvalid)="onSubmit()">
+    <app-custom-input
+      label="Nombre"
+      placeholder="Ej. Dirección de Recursos Humanos"
+      [required]="true"
+      [errorMessage]="nameError"
+      formControlName="name"
+    />
+
+    <app-custom-select
+      label="Tipo de área"
+      [options]="areaTypeOptions()"
+      [required]="true"
+      [errorMessage]="areaTypeError"
+      formControlName="areaTypeId"
+    />
+
+    <div form-actions class="flex justify-end gap-3 border-t border-border pt-4">
+      <button type="button" class="btn-ghost" (click)="closeModal()">Cancelar</button>
+      <button type="submit" class="btn-primary" [disabled]="isSaving()">
+        {{ isLoading() ? 'Guardando...' : config().isEdit ? 'Guardar cambios' : 'Crear' }}
+      </button>
+    </div>
+  </app-custom-form>
+</app-custom-modal>

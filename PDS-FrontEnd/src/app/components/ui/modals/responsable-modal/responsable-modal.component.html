@@ -1,0 +1,21 @@
+<app-custom-modal
+  [isOpen]="isOpen()"
+  [title]="isEdit ? 'Editar responsable' : 'Nuevo responsable'"
+  size="md"
+  [closeOnBackdrop]="false"
+  (closed)="onClose()"
+>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+    <app-custom-input formControlName="nombre" label="Nombre" [required]="true" [errorMessage]="nombreError" />
+    <app-custom-input formControlName="cargo" label="Cargo" />
+    <app-custom-input type="email" formControlName="email" label="Email" [errorMessage]="emailError" />
+    <app-custom-input type="tel" formControlName="telefono" label="Teléfono" />
+    @if (canLinkGobId()) {
+      <app-custom-input formControlName="gobidUserId" label="Usuario GobID" placeholder="00000000-0000-0000-0000-000000000000" [errorMessage]="gobidUserIdError" />
+    }
+    <div modal-actions class="flex justify-end gap-3 border-t border-border px-6 py-4">
+      <button type="button" class="btn-ghost" (click)="onClose()">Cancelar</button>
+      <button type="submit" class="btn-primary" [disabled]="isSaving()">{{ isEdit ? 'Guardar' : 'Crear' }}</button>
+    </div>
+  </form>
+</app-custom-modal>

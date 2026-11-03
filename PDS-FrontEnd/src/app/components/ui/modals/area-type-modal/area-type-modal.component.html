@@ -1,0 +1,40 @@
+<app-custom-modal
+  [isOpen]="isOpen()"
+  [title]="isEditMode ? 'Editar tipo de área' : 'Nuevo tipo de área'"
+  size="sm"
+  (closed)="onClose()"
+  [closeOnBackdrop]="false"
+>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+    <app-custom-input
+      formControlName="name"
+      label="Nombre"
+      placeholder="Ej: Despacho"
+      [required]="true"
+      [errorMessage]="nameError"
+    />
+
+    <app-custom-select
+      formControlName="parentId"
+      label="Area Padre"
+      placeholder="Selecciona un tipo de area"
+      [options]="areaTypes()"
+    />
+
+    <app-custom-input
+      formControlName="order"
+      label="Orden"
+      type="number"
+      placeholder="Ej: 1"
+      [errorMessage]="orderError"
+      [required]="true"
+    />
+
+    <div modal-actions class="flex justify-end gap-3 border-t border-border px-6 py-4">
+      <button type="button" class="btn-ghost" (click)="onClose()">Cancelar</button>
+      <button type="submit" class="btn-primary" [disabled]="isSaving()">
+        {{ isEditMode ? 'Guardar cambios' : 'Crear' }}
+      </button>
+    </div>
+  </form>
+</app-custom-modal>

@@ -1,0 +1,43 @@
+<div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+  @for (step of steps(); track step.key; let i = $index; let last = $last) {
+    <div class="flex items-center gap-2">
+      <span
+        class="grid size-7 place-items-center rounded-full text-xs font-semibold ring-1 ring-inset"
+        [ngClass]="{
+          'bg-success text-white ring-success': step.state === 'done',
+          'bg-brand text-white! ring-brand': step.state === 'current' && !isRejected(),
+          'bg-warning text-white ring-warning': step.state === 'current' && isRejected(),
+          'bg-surface-sunken text-ink-subtle ring-border': step.state === 'upcoming',
+        }"
+      >
+        @if (step.state === 'done') {
+          <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path
+              fill-rule="evenodd"
+              d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.5 7.55a1 1 0 0 1-1.42 0l-3.5-3.52a1 1 0 1 1 1.42-1.41l2.79 2.81 6.79-6.84a1 1 0 0 1 1.414-.004z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        } @else {
+          {{ i + 1 }}
+        }
+      </span>
+      <span
+        class="text-sm font-medium"
+        [ngClass]="step.state === 'upcoming' ? 'text-ink-subtle' : 'text-ink'"
+        >{{ step.label }}</span
+      >
+    </div>
+    @if (!last) {
+      <span class="h-px w-6 shrink-0 bg-border sm:w-8" aria-hidden="true"></span>
+    }
+  }
+
+  @if (isRejected()) {
+    <span class="h-px w-6 shrink-0 bg-error-border sm:w-8" aria-hidden="true"></span>
+    <span class="badge-error">{{ labels.Rejected }}</span>
+  }
+  @if (isSuperseded()) {
+    <span class="badge-neutral ml-1">{{ labels.Superseded }}</span>
+  }
+</div>

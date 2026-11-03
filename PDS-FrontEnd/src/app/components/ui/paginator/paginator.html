@@ -1,0 +1,78 @@
+<div
+  class="flex w-full flex-col-reverse items-center justify-between gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm sm:flex-row"
+>
+  <section class="flex flex-col items-center gap-4 sm:flex-row">
+    <div class="flex items-center gap-2">
+      <label for="pageSize" class="text-sm font-medium text-gray-600"
+        >Mostrar</label
+      >
+      <select
+        id="pageSize"
+        [(ngModel)]="currentSize"
+        (ngModelChange)="emitPageSize($event)"
+        class="cursor-pointer rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-700 transition-all outline-none hover:border-gray-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+      >
+        @for (i of pagaSizeRange; track $index) {
+        <option [value]="i">{{i}}</option>
+        }
+      </select>
+      <span class="text-sm font-medium text-gray-600">registros</span>
+    </div>
+  </section>
+  <section>
+    <div class="text-sm font-medium text-gray-500">
+      Mostrando
+      <span class="font-semibold text-gray-900"
+        >{{(currentSize() * (pageNumber - 1)) + 1}}</span
+      >
+      al
+      <span class="font-semibold text-gray-900"
+        >{{(currentSize() * pageNumber) > totalCount ? totalCount :
+        currentSize() * pageNumber}}</span
+      >
+      de <span class="font-semibold text-gray-900">{{totalCount}}</span>
+    </div>
+  </section>
+  <section class="flex items-center gap-1">
+    <div class="hidden">
+      @for (item of dummyArray | paginate: { itemsPerPage: currentSize(),
+      currentPage: pageNumber, totalItems: totalCount }; track $index) {
+      <span></span>
+      }
+    </div>
+
+    <pagination-template #p="paginationApi" (pageChange)="onPageChange($event)">
+      <div class="flex items-center gap-1.5">
+        <button
+          [disabled]="p.isFirstPage()"
+          (click)="p.previous()"
+          class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F2F3F5] p-0 text-brand transition-all hover:bg-brand hover:text-white disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#F2F3F5] disabled:hover:text-brand"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current transition-colors">
+            <path fill-rule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
+          </svg>
+        </button>
+
+        @for (page of p.pages; track page.value) {
+        <button
+          (click)="p.setCurrent(page.value)"
+          class="flex h-8 min-w-[2rem] items-center justify-center rounded-lg px-2 text-sm font-medium normal-case transition-all"
+          [ngClass]="p.getCurrent() === page.value ? 'bg-brand text-white shadow-md shadow-brand/20 hover:bg-brand-700' : 'bg-[#F2F3F5] text-brand hover:bg-brand-50'"
+        >
+          {{ page.label }}
+        </button>
+        }
+
+        <button
+          [disabled]="p.isLastPage()"
+          (click)="p.next()"
+          class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F2F3F5] p-0 text-brand transition-all hover:bg-brand hover:text-white disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#F2F3F5] disabled:hover:text-brand"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current transition-colors">
+            <path fill-rule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 1 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
+    </pagination-template>
+  </section>
+</div>

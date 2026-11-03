@@ -1,0 +1,50 @@
+<div class="flex flex-col gap-0.5">
+  @if (label()) {
+    <label [for]="id()" class="field-label leading-none">
+      {{ label() }}
+      @if (required()) {
+        <span class="text-error ml-0.5">*</span>
+      }
+    </label>
+  }
+
+  <textarea
+    #textareaRef
+    [id]="id()"
+    [rows]="rows()"
+    [placeholder]="placeholder()"
+    [disabled]="disabled()"
+    [attr.maxlength]="maxLength()"
+    [value]="value()"
+    (input)="onInput($event)"
+    (blur)="onBlur()"
+    [class]="textareaClasses()"
+    [attr.aria-invalid]="hasError() ? 'true' : null"
+    [attr.aria-describedby]="hasError() ? errorId() : null"
+  ></textarea>
+
+  <div class="flex items-start justify-between gap-2 h-3.5">
+    <div class="flex-1">
+      <p [id]="errorId()" class="flex items-center gap-1 text-xs text-error-text" aria-live="polite">
+        @if (hasError()) {
+          <svg class="size-3 shrink-0" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path
+              d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm-.75 4a.75.75 0 0 1 1.5 0v3.5a.75.75 0 0 1-1.5 0V5zm.75 7a.875.875 0 1 1 0-1.75A.875.875 0 0 1 8 12z"
+            />
+          </svg>
+          {{ errorMessage() }}
+        }
+      </p>
+    </div>
+
+    @if (showCharCount()) {
+      <p
+        class="shrink-0 text-xs tabular-nums"
+        [class.text-ink-subtle]="!charCountWarning()"
+        [class.text-warning-text]="charCountWarning()"
+      >
+        {{ charCount() }}/{{ maxLength() }}
+      </p>
+    }
+  </div>
+</div>

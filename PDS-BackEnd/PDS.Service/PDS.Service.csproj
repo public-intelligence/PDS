@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="16.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.9" />
+	<PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+    <!-- RF-RE-06: exportación de reportes. PDF (QuestPDF, licencia Community) y Excel (ClosedXML, MIT).
+         CSV usa un escritor mínimo propio (UTF-8 con BOM), sin dependencia externa. -->
+    <PackageReference Include="NodaTime" Version="3.2.2" />
+    <PackageReference Include="QuestPDF" Version="2025.1.0" />
+    <PackageReference Include="ClosedXML" Version="0.104.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Security\" />
+    <Folder Include="Templates\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PDS.Application\PDS.Application.csproj" />
+    <ProjectReference Include="..\PDS.Domain\PDS.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,17 @@
+<app-custom-modal
+  [isOpen]="isOpen()"
+  [title]="isEdit ? 'Editar servicio' : 'Nuevo servicio'"
+  size="md"
+  [closeOnBackdrop]="false"
+  (closed)="onClose()"
+>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+    <app-custom-input formControlName="nombre" label="Nombre" [required]="true" [errorMessage]="nombreError" />
+    <app-custom-input formControlName="codigo" label="Código" />
+    <app-custom-textarea formControlName="descripcion" label="Descripción" [rows]="3" />
+    <div modal-actions class="flex justify-end gap-3 border-t border-border px-6 py-4">
+      <button type="button" class="btn-ghost" (click)="onClose()">Cancelar</button>
+      <button type="submit" class="btn-primary" [disabled]="isSaving()">{{ isEdit ? 'Guardar' : 'Crear' }}</button>
+    </div>
+  </form>
+</app-custom-modal>

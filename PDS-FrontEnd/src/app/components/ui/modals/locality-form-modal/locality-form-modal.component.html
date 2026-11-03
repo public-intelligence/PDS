@@ -1,0 +1,339 @@
+<app-custom-modal
+  [isOpen]="isOpen()"
+  [title]="isEdit() ? 'Editar localidad' : 'Nueva localidad'"
+  size="xl"
+  [closeOnBackdrop]="false"
+  [isLoading]="isLoading()"
+  (closed)="onClose()"
+>
+  <form id="localityForm" [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
+    <app-form-error-banner [message]="formError()" />
+
+    <!-- Identificación -->
+    <section class="rounded-xl border border-border bg-surface-raised p-5">
+      <h3 class="mb-4 text-sm font-semibold text-ink">Identificación</h3>
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <app-custom-input formControlName="codigo" label="Código" [required]="true" [errorMessage]="codigoError" />
+        <app-custom-input formControlName="nombreOficial" label="Nombre oficial" [required]="true" [errorMessage]="nombreError" />
+        <app-custom-input formControlName="nombreCorto" label="Nombre corto" />
+        <app-custom-input formControlName="sigla" label="Sigla" />
+      </div>
+    </section>
+
+    <!-- Clasificación -->
+    <section class="rounded-xl border border-border bg-surface-raised p-5">
+      <h3 class="mb-4 text-sm font-semibold text-ink">Clasificación</h3>
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <app-custom-select formControlName="tipoLocalidadId" label="Tipo de localidad" [required]="true" [options]="tipoOptions()" />
+        <app-custom-select formControlName="naturalezaAdministrativaId" label="Naturaleza administrativa" [required]="true" [options]="naturalezaOptions()" />
+      </div>
+      @if (showFunciones) {
+        <fieldset class="mt-3">
+          <legend class="field-label">Funciones</legend>
+          <p class="text-xs text-ink-subtle">Para embajadas, misiones y consulados.</p>
+          <div class="mt-2 grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2 md:grid-cols-3">
+            @for (f of funciones(); track f.id) {
+              <label class="!mb-0 !flex cursor-pointer items-center gap-3 text-sm text-ink">
+                <input type="checkbox" class="!size-4 shrink-0 !p-0 accent-brand" [checked]="isFuncionSelected(f.id)" (change)="toggleFuncion(f.id)" />
+                <span>{{ f.nombre }}</span>
+              </label>
+            } @empty {
+              <span class="text-xs text-ink-subtle">No hay funciones registradas.</span>
+            }
+          </div>
+          <p class="field-error h-3.5" aria-live="polite">{{ funcionesError }}</p>
+        </fieldset>
+      }
+    </section>
+
+    <!-- Vínculos organizativos (RF-LO-02) -->
+    <section class="rounded-xl border border-border bg-surface-raised p-5">
+      <h3 class="mb-4 text-sm font-semibold text-ink">Vínculos organizativos</h3>
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <app-custom-select-search formControlName="unidadResponsableId" label="Unidad responsable" [options]="unidadOptions()" (search)="onUnidadSearch($event)" />
+        <div>
+          <app-custom-select-search formControlName="unidadVinculadaId" label="Unidad vinculada" [options]="unidadOptions()" (search)="onUnidadSearch($event)" />
+          @if (showUnidadVinculadaWarning) {
+            <p class="text-xs text-warning-text">Vincule la unidad del organigrama que contiene la estructura de esta representación.</p>
+          }
+        </div>
+        <app-custom-select-search formControlName="localidadPadreId" label="Localidad superior" [options]="localidadOptions()" />
+      </div>
+    </section>
+
+    <!-- Ubicación territorial: cascada en RD, ciudad en el exterior (RF-LO-18) -->
+    <section class="rounded-xl border border-border bg-surface-raised p-5">
+      <h3 class="mb-4 text-sm font-semibold text-ink">Ubicación territorial</h3>
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <app-custom-select-search formControlName="paisId" label="País" [required]="true" [options]="paisOptions()" [errorMessage]="paisError" />
+        @if (isAbroad()) {
+          <app-custom-input formControlName="ciudad" label="Ciudad" [required]="true" [errorMessage]="ciudadError" />
+          <app-custom-input formControlName="subdivisionAdministrativa" label="Estado / provincia / región" [errorMessage]="subdivisionError" />
+        } @else {
+          <app-custom-select-search formControlName="provinciaId" label="Provincia" [options]="provinciaOptions()" />
+          <app-custom-select formControlName="regionId" label="Región" [options]="regionOptions()" />
+          <app-custom-select-search formControlName="municipioId" label="Municipio" [options]="municipioOptions()" />
+          <app-custom-select-search formControlName="distritoMunicipalId" label="Distrito municipal" [options]="distritoOptions()" />
+        }
+        <div>
+          <app-custom-select-search formControlName="zonaHoraria" label="Zona horaria" [required]="true" [options]="zonaOptions()" [maxResults]="50" [errorMessage]="zonaHorariaError" />
+          @if (zonaReadOnly()) {
+            <p class="text-xs text-ink-subtle">Solo los administradores de calendario pueden cambiar la zona horaria.</p>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- Dirección -->
+    <section class="rounded-xl border border-border bg-surface-raised p-5">
+      <h3 class="mb-4 text-sm font-semibold text-ink">Dirección</h3>
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <app-custom-input formControlName="direccionCompleta" label="Dirección completa" [required]="true" [errorMessage]="direccionError" />
+        <app-custom-input formControlName="sectorBarrioParaje" label="Sector / barrio / paraje" />
+        <app-custom-input formControlName="edificioPisoLocalReferenciaInterna" label="Edificio / piso / referencia interna" />
+        <app-custom-input formControlName="codigoPostal" label="Código postal" />
+      </div>
+    </section>
+
+    <!-- Coordenadas -->
+    <section class="rounded-xl border border-border bg-surface-raised p-5">
+      <div class="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <h3 class="text-sm font-semibold text-ink">Coordenadas</h3>
+          <p class="mt-0.5 text-xs text-ink-subtle">Ubicación geográfica de la localidad.</p>
+        </div>
+        <button type="button" class="btn-secondary btn-sm" (click)="togglePickMap()">
+          {{ showMap() ? 'Ocultar mapa' : 'Seleccionar en el mapa' }}
+        </button>
+      </div>
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <app-custom-input type="number" formControlName="latitud" label="Latitud" />
+        <app-custom-input type="number" formControlName="longitud" label="Longitud" />
+      </div>
+      @if (showMap()) {
+        <div class="mt-3 overflow-hidden rounded-lg border border-border">
+          <div #pickMap class="h-[320px] w-full"></div>
+        </div>
+        <p class="mt-1 text-xs text-ink-subtle">Haga clic en el mapa o arrastre el marcador para fijar las coordenadas.</p>
+      }
+    </section>
+
+    <!-- Horario -->
+    <section class="rounded-xl border border-border bg-surface-raised p-5">
+      <h3 class="mb-4 text-sm font-semibold text-ink">Horario y acceso</h3>
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div>
+          <app-custom-input formControlName="horarioRegular" label="Nota de horario de atención (informativa)" />
+          <p class="text-xs text-ink-subtle">Solo informativa. El horario laboral se define en Calendario laboral, en el detalle de la localidad.</p>
+        </div>
+        <app-custom-input type="date" formControlName="fechaApertura" label="Fecha de apertura" />
+        <app-custom-textarea class="md:col-span-2" formControlName="notasAcceso" label="Notas de acceso" [rows]="2" />
+      </div>
+    </section>
+
+    <!-- Servicios -->
+    <section formArrayName="servicios" class="rounded-xl border border-border bg-surface-raised p-5">
+      <div class="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <h3 class="text-sm font-semibold text-ink">Servicios habilitados</h3>
+          <p class="mt-0.5 text-xs text-ink-subtle">Servicios que presta esta localidad.</p>
+        </div>
+        <button type="button" class="btn-secondary btn-sm" (click)="addServicio()">+ Agregar</button>
+      </div>
+      @if (groups('servicios').length === 0) {
+        <div class="rounded-lg border border-dashed border-border-strong bg-surface-sunken/60 px-4 py-6 text-center text-xs text-ink-subtle">
+          No hay servicios agregados todavía.
+        </div>
+      } @else {
+        <div class="flex flex-col gap-3">
+          @for (g of groups('servicios'); track $index) {
+            <div [formGroupName]="$index" class="grid grid-cols-1 items-end gap-3 rounded-lg border border-border bg-surface-sunken p-3 md:grid-cols-[1fr_auto_auto]">
+              <app-custom-select formControlName="servicioId" label="Servicio" [options]="servicioOptions()" />
+              <label class="flex items-center gap-1.5 pb-2.5 text-xs text-ink-muted">
+                <input type="checkbox" formControlName="habilitado" /> Habilitado
+              </label>
+              <button type="button" aria-label="Quitar servicio" class="btn-icon hover:bg-error-bg! hover:text-error!" (click)="removeAt('servicios', $index)">
+                <svg class="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.75 1a1 1 0 0 0-.96.73L7.42 3H4a1 1 0 0 0 0 2h.06l.81 11.32A2 2 0 0 0 6.86 18h6.28a2 2 0 0 0 1.99-1.68L15.94 5H16a1 1 0 1 0 0-2h-3.42l-.37-1.27A1 1 0 0 0 11.25 1h-2.5ZM8.5 7.5a.75.75 0 0 1 1.5 0v6a.75.75 0 0 1-1.5 0v-6Zm3.5-.75a.75.75 0 0 0-.75.75v6a.75.75 0 0 0 1.5 0v-6a.75.75 0 0 0-.75-.75Z" clip-rule="evenodd"/></svg>
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    <!-- Responsables -->
+    <section formArrayName="responsables" class="rounded-xl border border-border bg-surface-raised p-5">
+      <div class="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <h3 class="text-sm font-semibold text-ink">Responsables</h3>
+          <p class="mt-0.5 text-xs text-ink-subtle">Personas responsables de la localidad.</p>
+        </div>
+        <button type="button" class="btn-secondary btn-sm" (click)="addResponsable()">+ Agregar</button>
+      </div>
+      @if (groups('responsables').length === 0) {
+        <div class="rounded-lg border border-dashed border-border-strong bg-surface-sunken/60 px-4 py-6 text-center text-xs text-ink-subtle">
+          No hay responsables agregados todavía.
+        </div>
+      } @else {
+        <div class="flex flex-col gap-3">
+          @for (g of groups('responsables'); track $index) {
+            <div [formGroupName]="$index" class="grid grid-cols-1 items-end gap-3 rounded-lg border border-border bg-surface-sunken p-3 md:grid-cols-[1fr_1fr_auto_auto_auto]">
+              <app-custom-select formControlName="responsableId" label="Responsable" [options]="responsableOptions()" />
+              <app-custom-input formControlName="rol" label="Rol" />
+              <label class="flex items-center gap-1.5 pb-2.5 text-xs text-ink-muted">
+                <input type="checkbox" formControlName="principal" /> Principal
+              </label>
+              <label class="flex items-center gap-1.5 pb-2.5 text-xs text-ink-muted">
+                <input type="checkbox" formControlName="gestionaCalendario" /> Gestiona calendario
+              </label>
+              <button type="button" aria-label="Quitar responsable" class="btn-icon hover:bg-error-bg! hover:text-error!" (click)="removeAt('responsables', $index)">
+                <svg class="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.75 1a1 1 0 0 0-.96.73L7.42 3H4a1 1 0 0 0 0 2h.06l.81 11.32A2 2 0 0 0 6.86 18h6.28a2 2 0 0 0 1.99-1.68L15.94 5H16a1 1 0 1 0 0-2h-3.42l-.37-1.27A1 1 0 0 0 11.25 1h-2.5ZM8.5 7.5a.75.75 0 0 1 1.5 0v6a.75.75 0 0 1-1.5 0v-6Zm3.5-.75a.75.75 0 0 0-.75.75v6a.75.75 0 0 0 1.5 0v-6a.75.75 0 0 0-.75-.75Z" clip-rule="evenodd"/></svg>
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    <!-- Documentos (RF-LO-12) -->
+    <section formArrayName="documentos" class="rounded-xl border border-border bg-surface-raised p-5">
+      <div class="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <h3 class="text-sm font-semibold text-ink">Documentos (URL)</h3>
+          <p class="mt-0.5 text-xs text-ink-subtle">Enlaces a documentos relacionados.</p>
+        </div>
+        <button type="button" class="btn-secondary btn-sm" (click)="addDocumento()">+ Agregar</button>
+      </div>
+      @if (groups('documentos').length === 0) {
+        <div class="rounded-lg border border-dashed border-border-strong bg-surface-sunken/60 px-4 py-6 text-center text-xs text-ink-subtle">
+          No hay documentos agregados todavía.
+        </div>
+      } @else {
+        <div class="flex flex-col gap-3">
+          @for (g of groups('documentos'); track $index) {
+            <div [formGroupName]="$index" class="grid grid-cols-1 items-end gap-3 rounded-lg border border-border bg-surface-sunken p-3 md:grid-cols-[1fr_1fr_2fr_auto]">
+              <app-custom-input formControlName="tipoDocumento" label="Tipo" />
+              <app-custom-input formControlName="descripcion" label="Descripción" />
+              <app-custom-input type="url" formControlName="url" label="URL" />
+              <button type="button" aria-label="Quitar documento" class="btn-icon hover:bg-error-bg! hover:text-error!" (click)="removeAt('documentos', $index)">
+                <svg class="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.75 1a1 1 0 0 0-.96.73L7.42 3H4a1 1 0 0 0 0 2h.06l.81 11.32A2 2 0 0 0 6.86 18h6.28a2 2 0 0 0 1.99-1.68L15.94 5H16a1 1 0 1 0 0-2h-3.42l-.37-1.27A1 1 0 0 0 11.25 1h-2.5ZM8.5 7.5a.75.75 0 0 1 1.5 0v6a.75.75 0 0 1-1.5 0v-6Zm3.5-.75a.75.75 0 0 0-.75.75v6a.75.75 0 0 0 1.5 0v-6a.75.75 0 0 0-.75-.75Z" clip-rule="evenodd"/></svg>
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    <!-- Instrumentos legales -->
+    <section formArrayName="instrumentosLegales" class="rounded-xl border border-border bg-surface-raised p-5">
+      <div class="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <h3 class="text-sm font-semibold text-ink">Instrumentos legales</h3>
+          <p class="mt-0.5 text-xs text-ink-subtle">Normativas que sustentan la localidad.</p>
+        </div>
+        <button type="button" class="btn-secondary btn-sm" (click)="addInstrumento()">+ Agregar</button>
+      </div>
+      @if (groups('instrumentosLegales').length === 0) {
+        <div class="rounded-lg border border-dashed border-border-strong bg-surface-sunken/60 px-4 py-6 text-center text-xs text-ink-subtle">
+          No hay instrumentos legales agregados todavía.
+        </div>
+      } @else {
+        <div class="flex flex-col gap-3">
+          @for (g of groups('instrumentosLegales'); track $index) {
+            <div [formGroupName]="$index" class="grid grid-cols-1 items-end gap-3 rounded-lg border border-border bg-surface-sunken p-3 md:grid-cols-[1fr_1fr_auto]">
+              <app-custom-select-search formControlName="instrumentoLegalId" label="Instrumento legal" [options]="instrumentoOptions()" />
+              <app-custom-input formControlName="proposito" label="Propósito" />
+              <button type="button" aria-label="Quitar instrumento" class="btn-icon hover:bg-error-bg! hover:text-error!" (click)="removeAt('instrumentosLegales', $index)">
+                <svg class="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.75 1a1 1 0 0 0-.96.73L7.42 3H4a1 1 0 0 0 0 2h.06l.81 11.32A2 2 0 0 0 6.86 18h6.28a2 2 0 0 0 1.99-1.68L15.94 5H16a1 1 0 1 0 0-2h-3.42l-.37-1.27A1 1 0 0 0 11.25 1h-2.5ZM8.5 7.5a.75.75 0 0 1 1.5 0v6a.75.75 0 0 1-1.5 0v-6Zm3.5-.75a.75.75 0 0 0-.75.75v6a.75.75 0 0 0 1.5 0v-6a.75.75 0 0 0-.75-.75Z" clip-rule="evenodd"/></svg>
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    <!-- Unidades con presencia -->
+    <section formArrayName="unidadesPresencia" class="rounded-xl border border-border bg-surface-raised p-5">
+      <div class="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <h3 class="text-sm font-semibold text-ink">Unidades con presencia</h3>
+          <p class="mt-0.5 text-xs text-ink-subtle">Unidades organizativas con presencia física.</p>
+        </div>
+        <button type="button" class="btn-secondary btn-sm" (click)="addUnidad()">+ Agregar</button>
+      </div>
+      @if (groups('unidadesPresencia').length === 0) {
+        <div class="rounded-lg border border-dashed border-border-strong bg-surface-sunken/60 px-4 py-6 text-center text-xs text-ink-subtle">
+          No hay unidades agregadas todavía.
+        </div>
+      } @else {
+        <div class="flex flex-col gap-3">
+          @for (g of groups('unidadesPresencia'); track $index) {
+            <div [formGroupName]="$index" class="grid grid-cols-1 items-end gap-3 rounded-lg border border-border bg-surface-sunken p-3 md:grid-cols-[1fr_1fr_auto]">
+              <app-custom-select-search formControlName="unidadOrganizativaId" label="Unidad organizativa" [options]="unidadOptions()" (search)="onUnidadSearch($event)" />
+              <app-custom-input formControlName="notas" label="Notas" />
+              <button type="button" aria-label="Quitar unidad" class="btn-icon hover:bg-error-bg! hover:text-error!" (click)="removeAt('unidadesPresencia', $index)">
+                <svg class="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.75 1a1 1 0 0 0-.96.73L7.42 3H4a1 1 0 0 0 0 2h.06l.81 11.32A2 2 0 0 0 6.86 18h6.28a2 2 0 0 0 1.99-1.68L15.94 5H16a1 1 0 1 0 0-2h-3.42l-.37-1.27A1 1 0 0 0 11.25 1h-2.5ZM8.5 7.5a.75.75 0 0 1 1.5 0v6a.75.75 0 0 1-1.5 0v-6Zm3.5-.75a.75.75 0 0 0-.75.75v6a.75.75 0 0 0 1.5 0v-6a.75.75 0 0 0-.75-.75Z" clip-rule="evenodd"/></svg>
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    <!-- Cobertura territorial -->
+    <section formArrayName="coberturas" class="rounded-xl border border-border bg-surface-raised p-5">
+      <div class="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <h3 class="text-sm font-semibold text-ink">Cobertura territorial (provincias)</h3>
+          <p class="mt-0.5 text-xs text-ink-subtle">Provincias que cubre esta localidad.</p>
+        </div>
+        <button type="button" class="btn-secondary btn-sm" (click)="addCobertura()">+ Agregar</button>
+      </div>
+      @if (groups('coberturas').length === 0) {
+        <div class="rounded-lg border border-dashed border-border-strong bg-surface-sunken/60 px-4 py-6 text-center text-xs text-ink-subtle">
+          No hay provincias agregadas todavía.
+        </div>
+      } @else {
+        <div class="flex flex-col gap-3">
+          @for (g of groups('coberturas'); track $index) {
+            <div [formGroupName]="$index" class="grid grid-cols-1 items-end gap-3 rounded-lg border border-border bg-surface-sunken p-3 md:grid-cols-[1fr_auto]">
+              <app-custom-select-search formControlName="provinciaId" label="Provincia cubierta" [options]="provinciaOptions()" />
+              <button type="button" aria-label="Quitar provincia" class="btn-icon hover:bg-error-bg! hover:text-error!" (click)="removeAt('coberturas', $index)">
+                <svg class="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.75 1a1 1 0 0 0-.96.73L7.42 3H4a1 1 0 0 0 0 2h.06l.81 11.32A2 2 0 0 0 6.86 18h6.28a2 2 0 0 0 1.99-1.68L15.94 5H16a1 1 0 1 0 0-2h-3.42l-.37-1.27A1 1 0 0 0 11.25 1h-2.5ZM8.5 7.5a.75.75 0 0 1 1.5 0v6a.75.75 0 0 1-1.5 0v-6Zm3.5-.75a.75.75 0 0 0-.75.75v6a.75.75 0 0 0 1.5 0v-6a.75.75 0 0 0-.75-.75Z" clip-rule="evenodd"/></svg>
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    <!-- Observaciones -->
+    <section class="rounded-xl border border-border bg-surface-raised p-5">
+      <app-custom-textarea formControlName="observaciones" label="Observaciones" [rows]="2" />
+    </section>
+
+    <!-- Motivo (solo edición, RF-LO-06) -->
+    @if (isEdit()) {
+      <section class="rounded-xl border border-border bg-surface-raised p-5">
+        <app-custom-textarea formControlName="motivo" label="Motivo del cambio" [required]="true" [rows]="2" [errorMessage]="motivoError" />
+      </section>
+    } @else {
+      <p class="rounded-lg border border-info-border bg-info-bg px-3 py-2 text-sm text-info-text">
+        Al crear la localidad se copiará el horario laboral de la localidad predeterminada. Podrá cambiarlo en Calendario laboral.
+      </p>
+    }
+  </form>
+
+  <!-- Footer / Actions: hijo directo de app-custom-modal para fijarse al pie del panel -->
+  <div modal-actions class="flex justify-end gap-3 border-t border-border px-6 py-4">
+    <button type="button" class="btn-ghost" (click)="onClose()">Cancelar</button>
+    <button type="submit" form="localityForm" class="btn-primary" [disabled]="isSaving()">{{ isEdit() ? 'Guardar cambios' : 'Crear localidad' }}</button>
+  </div>
+</app-custom-modal>
+
+<app-locality-duplicate-modal
+  [isOpen]="isDuplicateOpen()"
+  [warnings]="duplicateWarnings()"
+  (cancel)="onDuplicateCancel()"
+  (override)="onDuplicateOverride($event)"
+/>

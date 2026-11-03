@@ -1,0 +1,129 @@
+<app-page-shell
+  title="Dashboard"
+  description="Resumen general del sistema de gestión de estructura organizacional"
+>
+  @if (loading()) {
+    <!-- Skeleton: reserva el espacio para evitar saltos de layout al cargar -->
+    <div class="animate-pulse">
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        @for (i of [1, 2, 3, 4]; track i) {
+          <div class="card flex items-start gap-4 p-5">
+            <div class="size-11 shrink-0 rounded-lg bg-gray-100"></div>
+            <div class="min-w-0 flex-1 space-y-2">
+              <div class="h-6 w-16 rounded bg-gray-200"></div>
+              <div class="h-3 w-24 rounded bg-gray-100"></div>
+              <div class="h-3 w-20 rounded bg-gray-100"></div>
+            </div>
+          </div>
+        }
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+        @for (i of [1, 2]; track i) {
+          <div class="card p-4 h-32"></div>
+        }
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+        @for (i of [1, 2, 3]; track i) {
+          <div class="card p-4 h-52"></div>
+        }
+      </div>
+    </div>
+  } @else if (dashboard(); as d) {
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      @for (stat of stats(); track stat.label) {
+        <div class="bg-white rounded-lg border border-gray-200 p-5 flex items-start gap-4">
+          <div class="shrink-0 p-2.5 rounded-lg {{ stat.color }}">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="size-6"
+              aria-hidden="true"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="stat.iconPath" />
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <p class="stat-value">{{ stat.value }}</p>
+              @if (stat.badge) {
+                <span class="badge-warning text-[10px] font-bold uppercase">
+                  {{ stat.badge }}
+                </span>
+              }
+            </div>
+            <p class="text-sm font-medium text-ink truncate">{{ stat.label }}</p>
+            <p class="text-xs text-ink-muted mt-0.5 truncate">{{ stat.description }}</p>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Cambios estructurales + Alertas de calidad -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+      <div class="card p-4">
+        <h2 class="text-sm font-semibold text-ink mb-3">
+          Cambios estructurales (último período)
+        </h2>
+        <div class="grid grid-cols-4 gap-2 text-center">
+          <div>
+            <p class="text-lg font-bold tabular-nums text-success-text">{{ fmt(d.recentStructuralChanges.createdUnits) }}</p>
+            <p class="text-xs text-ink-muted">Creadas</p>
+          </div>
+          <div>
+            <p class="text-lg font-bold tabular-nums text-brand">{{ fmt(d.recentStructuralChanges.modifiedUnits) }}</p>
+            <p class="text-xs text-ink-muted">Modificadas</p>
+          </div>
+          <div>
+            <p class="text-lg font-bold tabular-nums text-warning-text">{{ fmt(d.recentStructuralChanges.relocatedUnits) }}</p>
+            <p class="text-xs text-ink-muted">Reubicadas</p>
+          </div>
+          <div>
+            <p class="text-lg font-bold tabular-nums text-error-text">{{ fmt(d.recentStructuralChanges.deletedUnits) }}</p>
+            <p class="text-xs text-ink-muted">Eliminadas</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-4">
+        <h2 class="text-sm font-semibold text-ink mb-3">Alertas de calidad definicional</h2>
+        @if (!d.qualityAlerts.length) {
+          <p class="text-xs text-success-text">
+            Sin alertas: la estructura cumple los criterios definicionales.
+          </p>
+        } @else {
+          <ul class="flex flex-col gap-2">
+            @for (a of d.qualityAlerts; track a.code) {
+              <li class="flex items-center justify-between gap-2 rounded-lg bg-warning-bg px-3 py-1.5 ring-1 ring-inset ring-warning-border">
+                <span class="text-xs text-warning-text">{{ a.message }}</span>
+                <span class="shrink-0 rounded-full bg-warning-border px-2 py-0.5 text-xs font-bold tabular-nums text-warning-text">
+                  {{ fmt(a.count) }}
+                </span>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+
+    <!-- Distribuciones -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+      <div class="card p-4">
+        <app-chart type="donut" title="Plazas por grupo ocupacional" [data]="byGroup()" />
+      </div>
+      <div class="card p-4">
+        <app-chart type="donut" title="Plazas por categoría salarial" [data]="bySalary()" />
+      </div>
+      <div class="card p-4">
+        <app-chart type="bar" title="Plazas por nivel jerárquico" [data]="byLevel()" />
+      </div>
+    </div>
+  } @else {
+    <div class="py-12 text-center text-sm text-ink-subtle">
+      No hay una versión publicada para mostrar indicadores.
+    </div>
+  }
+</app-page-shell>

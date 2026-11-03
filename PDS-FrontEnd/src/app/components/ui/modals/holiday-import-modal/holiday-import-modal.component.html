@@ -1,0 +1,83 @@
+<app-custom-modal
+  [isOpen]="isOpen()"
+  title="Importar feriados"
+  size="lg"
+  [closeOnBackdrop]="false"
+  (closed)="onClose()"
+>
+  <div class="flex flex-col gap-4">
+    <app-form-error-banner [message]="formError()" />
+
+    <fieldset>
+      <legend class="field-label">Modo</legend>
+      <div class="mt-1 flex flex-wrap items-center gap-4">
+        <label class="flex items-center gap-1.5 text-sm text-ink">
+          <input type="radio" name="importMode" [checked]="mode() === 'agregar'" (change)="setMode('agregar')" />
+          Agregar a los existentes
+        </label>
+        <label class="flex items-center gap-1.5 text-sm text-ink">
+          <input type="radio" name="importMode" [checked]="mode() === 'reemplazarAnio'" (change)="setMode('reemplazarAnio')" />
+          Reemplazar el año
+        </label>
+        @if (mode() === 'reemplazarAnio') {
+          <select class="field-control w-28" aria-label="Año a reemplazar" (change)="setReplaceYear($event)">
+            @for (y of yearOptions(); track y) {
+              <option [value]="y" [selected]="y === replaceYear()">{{ y }}</option>
+            }
+          </select>
+        }
+      </div>
+    </fieldset>
+
+    <div class="flex flex-col gap-1">
+      <label for="holidayImportContent" class="field-label">Feriados (CSV o JSON)</label>
+      <textarea
+        id="holidayImportContent"
+        class="field-control h-40 font-mono text-xs"
+        placeholder="2027-01-01,Año Nuevo,DiaCompleto,,Resolución 1/2026"
+        [value]="content()"
+        (input)="setContent($event)"
+      ></textarea>
+      <p class="text-xs text-ink-subtle">
+        Columnas CSV: <code>fecha,nombre,alcance,intervalos,referenciaNormativa</code>. Ejemplo:
+        <code>2027-01-01,Año Nuevo,DiaCompleto,,Resolución 1/2026</code>
+      </p>
+      <label class="text-xs text-ink-muted">
+        o elija un archivo:
+        <input type="file" accept=".csv,.json" class="ml-1 text-xs" (change)="onFile($event)" />
+      </label>
+    </div>
+
+    @if (result(); as r) {
+      <div class="rounded-lg border border-border bg-surface-sunken p-3 text-sm">
+        <ul class="flex flex-wrap gap-x-6 gap-y-1 text-ink">
+          <li>Se crearán <strong class="tabular-nums">{{ r.creados }}</strong></li>
+          <li>Se actualizarán <strong class="tabular-nums">{{ r.actualizados }}</strong></li>
+          <li>Se omitirán <strong class="tabular-nums">{{ r.omitidos }}</strong></li>
+        </ul>
+        @if (r.errores.length) {
+          <table class="mt-3 w-full text-left text-xs">
+            <thead class="text-ink-subtle">
+              <tr><th class="w-16 py-1">Línea</th><th class="py-1">Error</th></tr>
+            </thead>
+            <tbody class="divide-y divide-border text-error-text">
+              @for (e of r.errores; track $index) {
+                <tr><td class="py-1 tabular-nums">{{ e.linea }}</td><td class="py-1">{{ e.error }}</td></tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+          <p class="mt-2 text-xs text-success-text">Validación sin errores. Ya puede importar.</p>
+        }
+      </div>
+    }
+  </div>
+
+  <div modal-actions class="flex justify-end gap-3 border-t border-border px-6 py-4">
+    <button type="button" class="btn-ghost" (click)="onClose()">Cancelar</button>
+    <button type="button" class="btn-secondary" [disabled]="isBusy()" (click)="validate()">Validar</button>
+    <button type="button" class="btn-primary" [disabled]="!canImport()" (click)="onImport()">Importar</button>
+  </div>
+</app-custom-modal>
+
+<app-confirmation-modal />
